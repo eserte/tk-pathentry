@@ -1,0 +1,33 @@
+Revision history for Perl extension Tk::PathEntry.
+
+2.23
+	- fixes for Windows
+
+2.21
+	- Tk804.025 compatibility fixes
+
+2.20
+	- make sure PathEntry dialog is closed before executing the callback
+
+2.19
+	- Tab loops through all choices, PageUp/PageDown also implemented
+	- dialog.t obeys BATCH variable
+
+2.18
+	- new -cancelcmd option
+	- -selectcmd is now documented and should be used instead of
+	  bind("<Return>">
+
+2.17
+	- ~ expansion
+	- new (yet undocumented) -autocomplete and -selectcmd option
+	- the choices widget is now a (selectable) Listbox, not a Label
+	- added Return binding to Tk::PathEntry::Dialog
+	- fixes
+
+2.10
+	- better POD
+	- added Changes and README files
+
+2.08
+	- first public CPAN release
