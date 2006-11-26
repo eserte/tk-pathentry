@@ -2,7 +2,7 @@
 # -*- perl -*-
 
 #
-# $Id: dialog.t,v 1.1 2006/09/20 19:23:58 eserte Exp $
+# $Id: dialog.t,v 1.2 2006/11/26 10:49:17 eserte Exp $
 # Author: Slaven Rezic
 #
 
