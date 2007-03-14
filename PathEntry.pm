@@ -1,7 +1,7 @@
 # -*- perl -*-
 
 #
-# $Id: PathEntry.pm,v 1.2 2006/11/26 10:49:17 eserte Exp $
+# $Id: PathEntry.pm,v 1.3 2007/03/14 21:48:55 eserte Exp $
 # Author: Slaven Rezic
 #
 # Copyright (C) 2001,2002,2003 Slaven Rezic. All rights reserved.
@@ -16,7 +16,7 @@ package Tk::PathEntry;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = sprintf("%d.%02d", q$Revision: 1.2 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.3 $ =~ /(\d+)\.(\d+)/);
 
 use base qw(Tk::Derived Tk::Entry);
 
