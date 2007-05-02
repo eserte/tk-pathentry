@@ -1,7 +1,7 @@
 # -*- perl -*-
 
 #
-# $Id: PathEntry.pm,v 1.6 2007/05/02 16:01:09 k_wittrock Exp $
+# $Id: PathEntry.pm,v 1.7 2007/05/02 16:05:13 k_wittrock Exp $
 # Author: Slaven Rezic
 #
 # Copyright (C) 2001,2002,2003 Slaven Rezic. All rights reserved.
@@ -16,7 +16,7 @@ package Tk::PathEntry;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = sprintf("%d.%02d", q$Revision: 1.6 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.7 $ =~ /(\d+)\.(\d+)/);
 
 use base qw(Tk::Derived Tk::Entry);
 
@@ -205,14 +205,14 @@ sub Populate {
 			    $^O eq "MSWin32" ? 0 : 1
 			    ],
 	 -isdircmd    => ['CALLBACK', undef, undef, ['_is_dir']],
-	 -isdirectorycommand => 'isdircmd',
+	 -isdirectorycommand => '-isdircmd',
 	 -choicescmd  => ['CALLBACK', undef, undef, ['_get_choices']],
-	 -choicescommand     => 'choicescmd',
+	 -choicescommand     => '-choicescmd',
 	 -autocomplete => ['PASSIVE'],
 	 -selectcmd   => ['CALLBACK'],
-	 -selectcommand => 'selectcmd',
+	 -selectcommand => '-selectcmd',
 	 -cancelcmd   => ['CALLBACK'],
-	 -cancelcommand => 'cancelcmd',
+	 -cancelcommand => '-cancelcmd',
 	);
 }
 
