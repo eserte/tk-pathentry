@@ -1,7 +1,7 @@
 # -*- perl -*-
 
 #
-# $Id: PathEntry.pm,v 1.5 2007/05/02 15:54:19 k_wittrock Exp $
+# $Id: PathEntry.pm,v 1.6 2007/05/02 16:01:09 k_wittrock Exp $
 # Author: Slaven Rezic
 #
 # Copyright (C) 2001,2002,2003 Slaven Rezic. All rights reserved.
@@ -16,7 +16,7 @@ package Tk::PathEntry;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = sprintf("%d.%02d", q$Revision: 1.5 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.6 $ =~ /(\d+)\.(\d+)/);
 
 use base qw(Tk::Derived Tk::Entry);
 
@@ -25,6 +25,8 @@ Construct Tk::Widget 'PathEntry';
 sub ClassInit {
     my($class,$mw) = @_;
     $class->SUPER::ClassInit($mw);
+
+    $mw->bind($class,"<Shift-Tab>" => sub {$mw->focusPrev});   # restore standard behaviour
 
     $mw->bind($class,"<Tab>" => sub {
 		  my $w = shift;
@@ -154,6 +156,12 @@ sub Populate {
     $w->bind("<Escape>" => sub {
 		 $w->Finish;
 		 $w->Callback(-cancelcmd => $w);
+	     });
+    $w->bind("<FocusIn>" => sub {
+		 # If the focus is passed to the entry widget by <Shift-Tab>,
+		 # all text in the widget gets selected. This might lateron cause
+		 # unintended deletion when pressing a key.
+		 $w->selectionClear();
 	     });
 
     if (exists $args->{-vcmd} ||
