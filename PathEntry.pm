@@ -1,7 +1,7 @@
 # -*- perl -*-
 
 #
-# $Id: PathEntry.pm,v 1.3 2007/03/14 21:48:55 eserte Exp $
+# $Id: PathEntry.pm,v 1.4 2007/05/02 15:46:57 k_wittrock Exp $
 # Author: Slaven Rezic
 #
 # Copyright (C) 2001,2002,2003 Slaven Rezic. All rights reserved.
@@ -16,7 +16,7 @@ package Tk::PathEntry;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = sprintf("%d.%02d", q$Revision: 1.3 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.4 $ =~ /(\d+)\.(\d+)/);
 
 use base qw(Tk::Derived Tk::Entry);
 
@@ -67,35 +67,32 @@ sub ClassInit {
 		  $w->_show_choices;
 	      });
 
-#XXX not yet! => problems, because <Return> should be bound to set
-# the entry value ... but <Return> is normally bound from outside this
-# module...XXX
-#      $mw->bind($class,"<Down>" => sub {
-#  		  my $w = shift;
-#  		  my $choices_t = $w->Subwidget("ChoicesToplevel");
-#  		  if ($choices_t && $choices_t->state ne 'withdrawn') {
-#  		      my $choices_l = $w->Subwidget("ChoicesLabel");
-#  		      my @sel = $choices_l->curselection;
-#  		      $choices_l->selectionClear(0,"end");
-#  		      if (!@sel) {
-#  			  $choices_l->selectionSet(0);
-#  		      } else {
-#  			  $choices_l->selectionSet($sel[0]+1);
-#  		      }
-#  		  }
-#  	      });
-#      $mw->bind($class,"<Up>" => sub {
-#  		  my $w = shift;
-#  		  my $choices_t = $w->Subwidget("ChoicesToplevel");
-#  		  if ($choices_t && $choices_t->state ne 'withdrawn') {
-#  		      my $choices_l = $w->Subwidget("ChoicesLabel");
-#  		      my @sel = $choices_l->curselection;
-#  		      $choices_l->selectionClear(0,"end");
-#  		      if (@sel && $sel[0] > 0) {
-#  			  $choices_l->selectionSet($sel[0]-1);
-#  		      }
-#  		  }
-#  	      });
+    $mw->bind($class,"<Down>" => sub {
+		  my $w = shift;
+		  my $choices_t = $w->Subwidget("ChoicesToplevel");
+		  if ($choices_t && $choices_t->state ne 'withdrawn') {
+		      my $choices_l = $w->Subwidget("ChoicesLabel");
+		      my @sel = $choices_l->curselection;
+		      $choices_l->selectionClear(0,"end");
+		      if (!@sel) {
+			  $choices_l->selectionSet(0);
+		      } else {
+			  $choices_l->selectionSet($sel[0]+1);
+		      }
+		  }
+	      });
+    $mw->bind($class,"<Up>" => sub {
+		  my $w = shift;
+		  my $choices_t = $w->Subwidget("ChoicesToplevel");
+		  if ($choices_t && $choices_t->state ne 'withdrawn') {
+		      my $choices_l = $w->Subwidget("ChoicesLabel");
+		      my @sel = $choices_l->curselection;
+		      $choices_l->selectionClear(0,"end");
+		      if (@sel && $sel[0] > 0) {
+			  $choices_l->selectionSet($sel[0]-1);
+		      }
+		  }
+	      });
 
     for ("Meta", "Alt") {
 	$mw->bind($class,"<$_-BackSpace>" => '_delete_last_path_component');
@@ -109,6 +106,15 @@ sub ClassInit {
 	      });
 
     $class;
+}
+
+sub SetBindtags{
+    my($w) = @_;
+
+    # Execute the widget bindings before the class bindings
+    $w->SUPER::SetBindtags;
+    my (@w_bindtags) = $w->bindtags;
+    $w->bindtags( [ @w_bindtags[1, 0, 2, 3] ] );
 }
 
 sub Populate {
@@ -133,6 +139,14 @@ sub Populate {
 			 $w->Callback(-selectcmd => $w);
 		     });
     $w->bind("<Return>" => sub {
+		 # On Return in the Listbox, transfer the selection to the Entry widget
+		 my $choices_l = $w->Subwidget("ChoicesLabel");
+		 my @sel = $choices_l->curselection;
+		 if (@sel) {
+		     $ {$w->cget(-textvariable)} = $choices_l->get($sel[0]);
+		     $w->icursor("end");
+		     $w->xview("end");
+		 }
 		 $w->Finish;
 		 $w->Callback(-selectcmd => $w);
 	     });
