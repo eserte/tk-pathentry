@@ -1,7 +1,7 @@
 # -*- perl -*-
 
 #
-# $Id: PathEntry.pm,v 1.4 2007/05/02 15:46:57 k_wittrock Exp $
+# $Id: PathEntry.pm,v 1.5 2007/05/02 15:54:19 k_wittrock Exp $
 # Author: Slaven Rezic
 #
 # Copyright (C) 2001,2002,2003 Slaven Rezic. All rights reserved.
@@ -16,7 +16,7 @@ package Tk::PathEntry;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = sprintf("%d.%02d", q$Revision: 1.4 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.5 $ =~ /(\d+)\.(\d+)/);
 
 use base qw(Tk::Derived Tk::Entry);
 
@@ -126,6 +126,7 @@ sub Populate {
 
     my $choices_l = $choices_t->Listbox(-background => "yellow",
 					-border => 0,
+					-width => 0,    # use autowidth feature
 				       )->pack(-fill => "both",
 					       -expand => 1);
     $w->Advertise("ChoicesLabel" => $choices_l);
@@ -383,13 +384,6 @@ sub _show_choices {
 	$max_height = $choices_height;
     }
     $choices_l->insert("end", @{$choices}[$w->{ChoicesTop} .. $w->{ChoicesTop}+$max_height-1]);
-    my $max_width;
-    foreach (@{$choices}[$w->{ChoicesTop} .. $w->{ChoicesTop}+$max_height-1]) {
-	if (!defined $max_width || length($_) > $max_width) {
-	    $max_width = length($_);
-	}
-    }
-    $choices_l->configure(-width => $max_width);
     if (defined $x_pos) {
 	$choices_t->geometry("+" . $x_pos . "+" . ($w->rooty+$w->height));
 	$choices_t->deiconify;
