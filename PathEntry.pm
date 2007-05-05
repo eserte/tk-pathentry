@@ -1,7 +1,7 @@
 # -*- perl -*-
 
 #
-# $Id: PathEntry.pm,v 1.7 2007/05/02 16:05:13 k_wittrock Exp $
+# $Id: PathEntry.pm,v 1.8 2007/05/05 16:31:17 k_wittrock Exp $
 # Author: Slaven Rezic
 #
 # Copyright (C) 2001,2002,2003 Slaven Rezic. All rights reserved.
@@ -16,7 +16,7 @@ package Tk::PathEntry;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = sprintf("%d.%02d", q$Revision: 1.7 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.8 $ =~ /(\d+)\.(\d+)/);
 
 use base qw(Tk::Derived Tk::Entry);
 
@@ -58,40 +58,17 @@ sub ClassInit {
 		  Tk->break;
 	      });
 
-    $mw->bind($class,"<Prior>" => sub {
-		  my $w = shift;
-		  $w->_incr_choices('-1');
-		  $w->_show_choices;
-	      });
-    $mw->bind($class,"<Next>" => sub {
-		  my $w = shift;
-		  $w->_incr_choices('+1');
-		  $w->_show_choices;
-	      });
-
     $mw->bind($class,"<Down>" => sub {
 		  my $w = shift;
 		  my $choices_t = $w->Subwidget("ChoicesToplevel");
+		  # If the popup list is not displayed, display it if possible
+		  $w->_popup_on_key($w->get()) if $choices_t->state eq 'withdrawn';
 		  if ($choices_t && $choices_t->state ne 'withdrawn') {
 		      my $choices_l = $w->Subwidget("ChoicesLabel");
+		      $choices_l->focus();
 		      my @sel = $choices_l->curselection;
-		      $choices_l->selectionClear(0,"end");
 		      if (!@sel) {
 			  $choices_l->selectionSet(0);
-		      } else {
-			  $choices_l->selectionSet($sel[0]+1);
-		      }
-		  }
-	      });
-    $mw->bind($class,"<Up>" => sub {
-		  my $w = shift;
-		  my $choices_t = $w->Subwidget("ChoicesToplevel");
-		  if ($choices_t && $choices_t->state ne 'withdrawn') {
-		      my $choices_l = $w->Subwidget("ChoicesLabel");
-		      my @sel = $choices_l->curselection;
-		      $choices_l->selectionClear(0,"end");
-		      if (@sel && $sel[0] > 0) {
-			  $choices_l->selectionSet($sel[0]-1);
 		      }
 		  }
 	      });
@@ -104,6 +81,8 @@ sub ClassInit {
     }
     $mw->bind($class,"<FocusOut>" => sub {
 		  my $w = shift;
+		  # Don't withdraw the choices listbox if the focus just has been passed to it.
+		  return if $w->focusCurrent == $w->Subwidget("ChoicesLabel");
 		  $w->Finish;
 	      });
 
@@ -141,18 +120,28 @@ sub Populate {
 			 $choices_t->withdraw;
 			 $w->Callback(-selectcmd => $w);
 		     });
-    $w->bind("<Return>" => sub {
-		 # On Return in the Listbox, transfer the selection to the Entry widget
-		 my $choices_l = $w->Subwidget("ChoicesLabel");
-		 my @sel = $choices_l->curselection;
+    # <Return> in the Listbox
+    $choices_l->bind("<Return>" => sub {
+		 # Transfer the selection to the Entry widget
+		 my $lb = shift;
+		 my @sel = $lb->curselection;
 		 if (@sel) {
-		     $ {$w->cget(-textvariable)} = $choices_l->get($sel[0]);
+		     $ {$w->cget(-textvariable)} = $lb->get($sel[0]);
 		     $w->icursor("end");
 		     $w->xview("end");
 		 }
 		 $w->Finish;
+	     });
+    # <Return> in the Entry
+    $w->bind("<Return>" => sub {
+		 $w->Finish;
 		 $w->Callback(-selectcmd => $w);
 	     });
+    # <Escape> in the Listbox
+    $choices_l->bind("<Escape>" => sub {
+		 $w->Finish;
+	     });
+    # <Escape> in the Entry
     $w->bind("<Escape>" => sub {
 		 $w->Finish;
 		 $w->Callback(-cancelcmd => $w);
@@ -175,7 +164,6 @@ sub Populate {
 	my($action)   = $_[4];
 	return 1 if $action == -1; # nothing on forced validation
 
-	undef $w->{ChoicesTop};
 	$w->_popup_on_key($pathname);
 
 	if ($action == 1 && # only on INSERT
@@ -231,6 +219,7 @@ sub Finish {
     $choices_t->withdraw;
     $choices_t->idletasks;
     delete $w->{CurrentChoices};
+    $w->focus();   # pass focus back to the Entry widget (required for Linux)
 }
 
 sub _popup_on_key {
@@ -238,7 +227,13 @@ sub _popup_on_key {
     if ($w->ismapped) {
 	$w->{CurrentChoices} = $w->Callback(-choicescmd => $w, $pathname);
 	if ($w->{CurrentChoices} && @{$w->{CurrentChoices}} > 1) {
-	    $w->_incr_choices("TAB") if defined $w->{ChoicesTop};
+	    my $choices_l = $w->Subwidget("ChoicesLabel");
+	    $choices_l->delete(0, 'end');
+	    $choices_l->insert('end', @{$w->{CurrentChoices}});
+	    # When the focus is passed to the Listbox, the last entry is
+	    # active, because the lines were inserted as a list. So pressing
+	    # the down arrow would select the last entry.
+	    $choices_l->activate(0);
 	    $w->_show_choices($w->rootx);
 	} else {
 	    my $choices_t = $w->Subwidget("ChoicesToplevel");
@@ -289,7 +284,6 @@ sub _delete_last_path_component {
     my $pathref = $w->cget(-textvariable);
     $$pathref = $before_cursor . $after_cursor;
     $w->icursor(length $before_cursor);
-    undef $w->{ChoicesTop};
     $w->_popup_on_key($$pathref);
 }
 
@@ -304,7 +298,6 @@ sub _delete_next_path_component {
     my $pathref = $w->cget(-textvariable);
     $$pathref = $before_cursor . $after_cursor;
     $w->icursor(length $before_cursor);
-    undef $w->{ChoicesTop};
     $w->_popup_on_key($$pathref);
 }
 
@@ -378,51 +371,11 @@ sub _get_choices {
 
 sub _show_choices {
     my($w, $x_pos) = @_;
-    my $choices = $w->{CurrentChoices};
-    my $choices_l = $w->Subwidget("ChoicesLabel");
     my $choices_t = $w->Subwidget("ChoicesToplevel");
-    #$choices_l->configure(-text => join("\n", @$choices));
-    $choices_l->delete(0,"end");
-    if (!defined $w->{ChoicesTop}) {
-	$w->{ChoicesTop} = 0;
-    }
-    my $max_height = @$choices - $w->{ChoicesTop};
-    my $choices_height = $choices_l->cget(-height);
-    if ($max_height > $choices_height) {
-	$max_height = $choices_height;
-    }
-    $choices_l->insert("end", @{$choices}[$w->{ChoicesTop} .. $w->{ChoicesTop}+$max_height-1]);
     if (defined $x_pos) {
 	$choices_t->geometry("+" . $x_pos . "+" . ($w->rooty+$w->height));
 	$choices_t->deiconify;
 	$choices_t->raise;
-    }
-}
-
-sub _incr_choices {
-    my($w, $direction) = @_;
-    my $choices_t = $w->Subwidget("ChoicesToplevel");
-    if ($choices_t->state eq 'normal' &&
-	defined $w->{ChoicesTop} &&
-	$w->{CurrentChoices}) {
-	my $choices_l = $w->Subwidget("ChoicesLabel");
-	my $choices_height = $choices_l->cget(-height);
-	if ($direction eq '-1') {
-	    $w->{ChoicesTop} -= $choices_height;
-	    if ($w->{ChoicesTop} < 0) {
-		$w->{ChoicesTop} = 0;
-	    }
-	} else {
-	    $w->{ChoicesTop} += $choices_height;
-	    if ($w->{ChoicesTop} >= @{$w->{CurrentChoices}}) {
-		if ($direction eq 'TAB') {
-		    $w->{ChoicesTop} = 0;
-		} else {
-		    $w->{ChoicesTop} -= $choices_height;
-		    return;
-		}
-	    }
-	}
     }
 }
 
