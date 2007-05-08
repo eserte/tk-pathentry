@@ -1,7 +1,7 @@
 # -*- perl -*-
 
 #
-# $Id: PathEntry.pm,v 1.8 2007/05/05 16:31:17 k_wittrock Exp $
+# $Id: PathEntry.pm,v 1.9 2007/05/08 16:23:55 k_wittrock Exp $
 # Author: Slaven Rezic
 #
 # Copyright (C) 2001,2002,2003 Slaven Rezic. All rights reserved.
@@ -16,7 +16,7 @@ package Tk::PathEntry;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = sprintf("%d.%02d", q$Revision: 1.8 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.9 $ =~ /(\d+)\.(\d+)/);
 
 use base qw(Tk::Derived Tk::Entry);
 
@@ -162,6 +162,7 @@ sub Populate {
     $args->{-vcmd} = sub {
 	my($pathname) = $_[0];
 	my($action)   = $_[4];
+	$action -= 7 if $action > 5;   # replace actual by official value
 	return 1 if $action == -1; # nothing on forced validation
 
 	$w->_popup_on_key($pathname);
