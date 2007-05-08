@@ -1,7 +1,7 @@
 # -*- perl -*-
 
 #
-# $Id: PathEntry.pm,v 1.9 2007/05/08 16:23:55 k_wittrock Exp $
+# $Id: PathEntry.pm,v 1.10 2007/05/08 16:26:32 k_wittrock Exp $
 # Author: Slaven Rezic
 #
 # Copyright (C) 2001,2002,2003 Slaven Rezic. All rights reserved.
@@ -16,7 +16,7 @@ package Tk::PathEntry;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = sprintf("%d.%02d", q$Revision: 1.9 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.10 $ =~ /(\d+)\.(\d+)/);
 
 use base qw(Tk::Derived Tk::Entry);
 
@@ -366,6 +366,7 @@ sub _get_choices {
     } else {
 	my $glob;
 	$glob = "$pathname*";
+	use File::Glob ':glob';   # allow whitespace in $pathname
 	[ glob($glob) ];
     }
 }
