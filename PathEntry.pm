@@ -1,7 +1,7 @@
 # -*- perl -*-
 
 #
-# $Id: PathEntry.pm,v 1.11 2007/05/09 14:20:29 k_wittrock Exp $
+# $Id: PathEntry.pm,v 1.12 2007/05/09 14:23:12 k_wittrock Exp $
 # Author: Slaven Rezic
 #
 # Copyright (C) 2001,2002,2003 Slaven Rezic. All rights reserved.
@@ -16,7 +16,7 @@ package Tk::PathEntry;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = sprintf("%d.%02d", q$Revision: 1.11 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.12 $ =~ /(\d+)\.(\d+)/);
 
 use base qw(Tk::Derived Tk::Entry);
 
@@ -157,6 +157,12 @@ sub Populate {
 	$action -= 7 if $action > 5;   # replace actual by official value
 	return 1 if $action == -1; # nothing on forced validation
 
+	# validate directory on input of separator
+	if ($action == 1) {
+	    my $pos_sep_rx = $w->_pos_sep_rx;
+	    my $case_rx = $w->cget(-casesensitive) ? "" : "(?i)";
+	    $w->_valid_dir('Path', @_) if $pathname =~ /$case_rx$pos_sep_rx$/;
+	}
 	$w->_popup_on_key($pathname);
 
 	if ($action == 1 && # only on INSERT
@@ -194,6 +200,7 @@ sub Populate {
 	 -selectcommand => '-selectcmd',
 	 -cancelcmd   => ['CALLBACK'],
 	 -cancelcommand => '-cancelcmd',
+	 -messagecmd  => ['CALLBACK', undef, undef, ['_show_msg']],
 	);
 }
 
@@ -204,6 +211,9 @@ sub ConfigChanged {
 	    $w->_set_text($args->{'-initial' . $_});
 	}
     }
+    # validate initial directory
+    $w->_valid_dir('Initial directory', $args->{'-initialdir'})
+	if (defined $args->{'-initialdir'}  &&  ! defined $args->{'-initialfile'});
 }
 
 sub Finish {
@@ -385,6 +395,33 @@ sub _set_text {
     $w->xview("end");
 }
 
+# Warn if "directory" exists as a plain file
+
+sub _valid_dir {
+    my ($w, $type, $pathname) = @_;
+
+    # remove trailing separators
+    my $pos_sep_rx = $w->_pos_sep_rx;
+    my $case_rx = $w->cget(-casesensitive) ? "" : "(?i)";
+    $pathname =~ s/$case_rx$pos_sep_rx+$//;
+    return unless $pathname;
+    if (-e $pathname  &&  ! $w->Callback(-isdircmd => $w, $pathname)) {
+	# $type is 'Path' or 'Initial directory'.
+	$w->Callback(-messagecmd => $w, "$type $pathname\nis not a directory");
+        # Don't suppress or attempt to autocorrect the directory.
+        # Give the user the chance to correct a typo error.
+    }
+}
+
+# Show message by default in messageBox
+
+sub _show_msg {
+    my ($w, $msg) = @_;
+
+    $w->messageBox(-title => $msg =~ /^Error:/ ? 'Error' : 'Warning',
+	-icon => 'warning', -message => $msg);
+}
+
 1;
 
 __END__
@@ -458,6 +495,19 @@ C<-selectcommand>.
 
 This will be called if the Escape key is pressed. Alias:
 C<-cancelcommand>.
+
+=item -autocomplete
+
+If this is set to true, and there remains only one item in the
+choice listbox, it will be transferred to the entry value automatically.
+
+=item -messagecmd
+
+Can be used to set a different subroutine for displaying messages. The
+message is passed as the second parameter. Examples are 
+C<-messagecmd => sub {print "$_[1]\n"}>, C<-messagecmd => sub {$_[0]->bell}>,
+or even C<-messagecmd => undef>. The default is a subroutine using
+C<messageBox>. 
 
 =back
 
