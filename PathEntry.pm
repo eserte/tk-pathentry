@@ -1,7 +1,7 @@
 # -*- perl -*-
 
 #
-# $Id: PathEntry.pm,v 1.10 2007/05/08 16:26:32 k_wittrock Exp $
+# $Id: PathEntry.pm,v 1.11 2007/05/09 14:20:29 k_wittrock Exp $
 # Author: Slaven Rezic
 #
 # Copyright (C) 2001,2002,2003 Slaven Rezic. All rights reserved.
@@ -16,7 +16,7 @@ package Tk::PathEntry;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = sprintf("%d.%02d", q$Revision: 1.10 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.11 $ =~ /(\d+)\.(\d+)/);
 
 use base qw(Tk::Derived Tk::Entry);
 
@@ -46,12 +46,8 @@ sub ClassInit {
 			  my $sep = $w->_sep;
 			  $common .= $sep;
 		      }
-		      my $pathref = $w->cget(-textvariable);
-		      $$pathref = $common;
-		      $w->icursor("end");
-		      $w->xview("end");
-
-		      $w->_popup_on_key($$pathref);
+		      $w->_set_text($common);
+		      $w->_popup_on_key($common);
 		  } else {
 		      $w->bell;
 		  }
@@ -111,14 +107,12 @@ sub Populate {
 				       )->pack(-fill => "both",
 					       -expand => 1);
     $w->Advertise("ChoicesLabel" => $choices_l);
+    # <Button-1> in the Listbox
     $choices_l->bind("<1>" => sub {
 			 my $lb = shift;
-			 my $y = $lb->nearest($lb->XEvent->y);
-			 $ {$w->cget(-textvariable)} = $lb->get($y);
-			 $w->icursor("end");
-			 $w->xview("end");
+			 (my $y) = $lb->curselection;
+			 $w->_set_text($lb->get($y));
 			 $choices_t->withdraw;
-			 $w->Callback(-selectcmd => $w);
 		     });
     # <Return> in the Listbox
     $choices_l->bind("<Return>" => sub {
@@ -126,9 +120,7 @@ sub Populate {
 		 my $lb = shift;
 		 my @sel = $lb->curselection;
 		 if (@sel) {
-		     $ {$w->cget(-textvariable)} = $lb->get($sel[0]);
-		     $w->icursor("end");
-		     $w->xview("end");
+		     $w->_set_text($lb->get($sel[0]));
 		 }
 		 $w->Finish;
 	     });
@@ -171,7 +163,7 @@ sub Populate {
 	    $w->{CurrentChoices} && @{$w->{CurrentChoices}} == 1 &&
 	    $w->cget(-autocomplete)) {
 	    # XXX the afterIdle is hackish
-	    $w->afterIdle(sub { $ {$w->cget(-textvariable)} = $w->{CurrentChoices}[0] });
+	    $w->afterIdle(sub { $w->_set_text($w->{CurrentChoices}[0]) });
 	    return 0;
 	}
 
@@ -209,7 +201,7 @@ sub ConfigChanged {
     my($w,$args) = @_;
     for (qw/dir file/) {
 	if (defined $args->{'-initial' . $_}) {
-	    $ {$w->cget(-textvariable)} = $args->{'-initial' . $_};
+	    $w->_set_text($args->{'-initial' . $_});
 	}
     }
 }
@@ -382,6 +374,16 @@ sub _show_choices {
 }
 
 sub _is_dir { -d $_[1] }
+
+# Replace text in widget and position the cursor to the end
+
+sub _set_text {
+    my ($w, $text) = @_;
+
+    $ {$w->cget(-textvariable)} = $text;
+    $w->icursor("end");
+    $w->xview("end");
+}
 
 1;
 
