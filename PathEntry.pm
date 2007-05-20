@@ -1,7 +1,7 @@
 # -*- perl -*-
 
 #
-# $Id: PathEntry.pm,v 1.13 2007/05/20 14:00:55 k_wittrock Exp $
+# $Id: PathEntry.pm,v 1.14 2007/05/20 14:04:24 k_wittrock Exp $
 # Author: Slaven Rezic
 #
 # Copyright (C) 2001,2002,2003 Slaven Rezic. All rights reserved.
@@ -16,7 +16,7 @@ package Tk::PathEntry;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = sprintf("%d.%02d", q$Revision: 1.13 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.14 $ =~ /(\d+)\.(\d+)/);
 
 use base qw(Tk::Derived Tk::Entry);
 
@@ -197,11 +197,13 @@ sub Populate {
 	 -cancelcmd   => ['CALLBACK'],
 	 -cancelcommand => '-cancelcmd',
 	 -messagecmd  => ['CALLBACK', undef, undef, ['_show_msg']],
+	 -height        => [$choices_l, qw/height Height 10/],
 	);
 }
 
 sub ConfigChanged {
     my($w,$args) = @_;
+    $w->{max_show} = $w->cget(-height);   # save original height of the listbox
     for (qw/dir file/) {
 	if (defined $args->{'-initial' . $_}) {
 	    $w->_set_text($args->{'-initial' . $_});
@@ -218,6 +220,8 @@ sub Finish {
     $choices_t->withdraw;
     $choices_t->idletasks;
     delete $w->{CurrentChoices};
+    $w->toplevel->deiconify();   # ensure the visiblity of the container window
+    $w->toplevel->raise();
     $w->focus();   # pass focus back to the Entry widget (required for Linux)
 }
 
@@ -372,6 +376,17 @@ sub _get_choices {
 sub _show_choices {
     my($w, $x_pos) = @_;
     my $choices_t = $w->Subwidget("ChoicesToplevel");
+
+    # Set dynamic height of listbox
+    my $choices_height = $w->{max_show};
+    if ($choices_height < 0) {
+	my $max_height = @{$w->{CurrentChoices}};
+	if ($max_height > -$choices_height) {
+	    $max_height = -$choices_height;
+	}
+	my $choices_l = $w->Subwidget("ChoicesLabel");
+	$choices_l->configure(-height => $max_height);
+    }
     if (defined $x_pos) {
 	$choices_t->geometry("+" . $x_pos . "+" . ($w->rooty+$w->height));
 	$choices_t->deiconify;
@@ -522,6 +537,13 @@ message is passed as the second parameter. Examples are
 C<-messagecmd => sub {print "$_[1]\n"}>, C<-messagecmd => sub {$_[0]->bell}>,
 or even C<-messagecmd => undef>. The default is a subroutine using
 C<messageBox>. 
+
+=item -height
+
+Set the height of the choice listbox. The default is 10 lines. If height 
+is negative, the displayed height changes
+dynamically, and the absolute value gives the maximum displayed height.
+If height is zero, there is no maximum.
 
 =back
 
