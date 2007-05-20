@@ -1,7 +1,7 @@
 # -*- perl -*-
 
 #
-# $Id: PathEntry.pm,v 1.12 2007/05/09 14:23:12 k_wittrock Exp $
+# $Id: PathEntry.pm,v 1.13 2007/05/20 14:00:55 k_wittrock Exp $
 # Author: Slaven Rezic
 #
 # Copyright (C) 2001,2002,2003 Slaven Rezic. All rights reserved.
@@ -16,7 +16,7 @@ package Tk::PathEntry;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = sprintf("%d.%02d", q$Revision: 1.12 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.13 $ =~ /(\d+)\.(\d+)/);
 
 use base qw(Tk::Derived Tk::Entry);
 
@@ -33,7 +33,7 @@ sub ClassInit {
 		  if (!defined $w->{CurrentChoices}) {
 		      # this is called only on init:
 		      my $pathref = $w->cget(-textvariable);
-		      $w->_popup_on_key($$pathref);
+		      $w->{CurrentChoices} = $w->Callback(-choicescmd => $w, $$pathref);
 		  }
 		  if (@{$w->{CurrentChoices}} > 0) {
 		      my $pos_sep_rx = $w->_pos_sep_rx;
@@ -75,12 +75,6 @@ sub ClassInit {
 	$mw->bind($class,"<$_-f>"         => '_forward_path_component');
 	$mw->bind($class,"<$_-b>"         => '_backward_path_component');
     }
-    $mw->bind($class,"<FocusOut>" => sub {
-		  my $w = shift;
-		  # Don't withdraw the choices listbox if the focus just has been passed to it.
-		  return if $w->focusCurrent == $w->Subwidget("ChoicesLabel");
-		  $w->Finish;
-	      });
 
     $class;
 }
@@ -110,9 +104,10 @@ sub Populate {
     # <Button-1> in the Listbox
     $choices_l->bind("<1>" => sub {
 			 my $lb = shift;
-			 (my $y) = $lb->curselection;
-			 $w->_set_text($lb->get($y));
-			 $choices_t->withdraw;
+			 (my $sel) = $lb->curselection;
+			 # Take full path from CurrentChoices array
+			 $w->_set_text($w->{CurrentChoices}[$sel]);
+			 $w->Finish;
 		     });
     # <Return> in the Listbox
     $choices_l->bind("<Return>" => sub {
@@ -120,7 +115,8 @@ sub Populate {
 		 my $lb = shift;
 		 my @sel = $lb->curselection;
 		 if (@sel) {
-		     $w->_set_text($lb->get($sel[0]));
+		     # Take full path from CurrentChoices array
+		     $w->_set_text($w->{CurrentChoices}[$sel[0]]);
 		 }
 		 $w->Finish;
 	     });
@@ -232,7 +228,7 @@ sub _popup_on_key {
 	if ($w->{CurrentChoices} && @{$w->{CurrentChoices}} > 1) {
 	    my $choices_l = $w->Subwidget("ChoicesLabel");
 	    $choices_l->delete(0, 'end');
-	    $choices_l->insert('end', @{$w->{CurrentChoices}});
+	    $w->_insert_pathnames($choices_l);
 	    # When the focus is passed to the Listbox, the last entry is
 	    # active, because the lines were inserted as a list. So pressing
 	    # the down arrow would select the last entry.
@@ -410,6 +406,24 @@ sub _valid_dir {
 	$w->Callback(-messagecmd => $w, "$type $pathname\nis not a directory");
         # Don't suppress or attempt to autocorrect the directory.
         # Give the user the chance to correct a typo error.
+    }
+}
+
+# Insert last component of path names into listbox
+
+sub _insert_pathnames {
+    my ($w, $choices_l) = @_;
+    my $choices = $w->{CurrentChoices};
+
+    # Show last component of file names
+    my $pos_sep_rx = $w->_pos_sep_rx;
+    my $case_rx = $w->cget(-casesensitive) ? "" : "(?i)";
+    if (@{$choices}[0] =~ /(.*$case_rx$pos_sep_rx)./) {
+	my $first = length($1);
+	$choices_l->insert("end",
+	    map {substr($_, $first)} @{$choices});
+    } else {
+	$choices_l->insert("end", @{$choices});
     }
 }
 
