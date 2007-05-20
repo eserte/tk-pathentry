@@ -1,7 +1,7 @@
 # -*- perl -*-
 
 #
-# $Id: PathEntry.pm,v 1.14 2007/05/20 14:04:24 k_wittrock Exp $
+# $Id: PathEntry.pm,v 1.15 2007/05/20 14:06:58 k_wittrock Exp $
 # Author: Slaven Rezic
 #
 # Copyright (C) 2001,2002,2003 Slaven Rezic. All rights reserved.
@@ -16,7 +16,7 @@ package Tk::PathEntry;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = sprintf("%d.%02d", q$Revision: 1.14 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.15 $ =~ /(\d+)\.(\d+)/);
 
 use base qw(Tk::Derived Tk::Entry);
 
@@ -178,6 +178,14 @@ sub Populate {
 	$args->{-textvariable} = \$pathname;
     }
 
+    # validate directory color
+    eval {$w->rgb($args->{-dircolor})} if exists $args->{-dircolor};
+    if ($@) {
+	(my $msg = $@) =~ s/ at .+/ replaced by "blue"/s;
+	$w->afterIdle(sub {$w->Callback(-messagecmd => $w, "Option -dircolor: $msg")});
+	$args->{-dircolor} = 'blue';
+    }
+
     $w->ConfigSpecs
 	(-initialdir  => ['PASSIVE',  undef, undef, undef],
 	 -initialfile => ['PASSIVE',  undef, undef, undef],
@@ -198,6 +206,7 @@ sub Populate {
 	 -cancelcommand => '-cancelcmd',
 	 -messagecmd  => ['CALLBACK', undef, undef, ['_show_msg']],
 	 -height        => [$choices_l, qw/height Height 10/],
+	 -dircolor      => ['PASSIVE',  undef, undef, undef],
 	);
 }
 
@@ -233,6 +242,8 @@ sub _popup_on_key {
 	    my $choices_l = $w->Subwidget("ChoicesLabel");
 	    $choices_l->delete(0, 'end');
 	    $w->_insert_pathnames($choices_l);
+	    # Mark directories if requested
+	    $w->_dircolor($choices_l, $w->cget(-dircolor)) if defined $w->cget(-dircolor);
 	    # When the focus is passed to the Listbox, the last entry is
 	    # active, because the lines were inserted as a list. So pressing
 	    # the down arrow would select the last entry.
@@ -387,6 +398,7 @@ sub _show_choices {
 	my $choices_l = $w->Subwidget("ChoicesLabel");
 	$choices_l->configure(-height => $max_height);
     }
+
     if (defined $x_pos) {
 	$choices_t->geometry("+" . $x_pos . "+" . ($w->rooty+$w->height));
 	$choices_t->deiconify;
@@ -439,6 +451,20 @@ sub _insert_pathnames {
 	    map {substr($_, $first)} @{$choices});
     } else {
 	$choices_l->insert("end", @{$choices});
+    }
+}
+
+# Display directories in a different color
+
+sub _dircolor {
+    my ($w, $choices_l, $dircolor) = @_;
+    my $path;
+
+    foreach (0 .. $choices_l->size - 1) {
+	# Take full path from CurrentChoices array
+	$path = $w->{CurrentChoices}[$w->{ChoicesTop} + $_];
+	$choices_l->itemconfigure($_, -foreground => $dircolor)
+	    if $w->Callback(-isdircmd => $w, $path);
     }
 }
 
@@ -537,6 +563,11 @@ message is passed as the second parameter. Examples are
 C<-messagecmd => sub {print "$_[1]\n"}>, C<-messagecmd => sub {$_[0]->bell}>,
 or even C<-messagecmd => undef>. The default is a subroutine using
 C<messageBox>. 
+
+=item -dircolor
+
+This defines the color for marking directories in the choice listbox. By default 
+directories are not marked.
 
 =item -height
 
