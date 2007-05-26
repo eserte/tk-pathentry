@@ -1,7 +1,7 @@
 # -*- perl -*-
 
 #
-# $Id: PathEntry.pm,v 1.15 2007/05/20 14:06:58 k_wittrock Exp $
+# $Id: PathEntry.pm,v 1.16 2007/05/26 15:59:07 k_wittrock Exp $
 # Author: Slaven Rezic
 #
 # Copyright (C) 2001,2002,2003 Slaven Rezic. All rights reserved.
@@ -16,7 +16,7 @@ package Tk::PathEntry;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = sprintf("%d.%02d", q$Revision: 1.15 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.16 $ =~ /(\d+)\.(\d+)/);
 
 use base qw(Tk::Derived Tk::Entry);
 
@@ -26,34 +26,7 @@ sub ClassInit {
     my($class,$mw) = @_;
     $class->SUPER::ClassInit($mw);
 
-    $mw->bind($class,"<Shift-Tab>" => sub {$mw->focusPrev});   # restore standard behaviour
-
-    $mw->bind($class,"<Tab>" => sub {
-		  my $w = shift;
-		  if (!defined $w->{CurrentChoices}) {
-		      # this is called only on init:
-		      my $pathref = $w->cget(-textvariable);
-		      $w->{CurrentChoices} = $w->Callback(-choicescmd => $w, $$pathref);
-		  }
-		  if (@{$w->{CurrentChoices}} > 0) {
-		      my $pos_sep_rx = $w->_pos_sep_rx;
-		      my $common = $w->_common_match;
-		      my $case_rx = $w->cget(-casesensitive) ? "" : "(?i)";
-		      if ($w->Callback(-isdircmd => $w, $common) &&
-			  $common !~ m/$case_rx$pos_sep_rx$/             &&
-			  @{$w->{CurrentChoices}} == 1
-			 ) {
-			  my $sep = $w->_sep;
-			  $common .= $sep;
-		      }
-		      $w->_set_text($common);
-		      $w->_popup_on_key($common);
-		  } else {
-		      $w->bell;
-		  }
-		  Tk->break;
-	      });
-
+    # <Down>  -  popup the choices window
     $mw->bind($class,"<Down>" => sub {
 		  my $w = shift;
 		  my $choices_t = $w->Subwidget("ChoicesToplevel");
@@ -75,6 +48,12 @@ sub ClassInit {
 	$mw->bind($class,"<$_-f>"         => '_forward_path_component');
 	$mw->bind($class,"<$_-b>"         => '_backward_path_component');
     }
+    $mw->bind($class,"<FocusOut>" => sub {
+		  my $w = shift;
+		  # Don't withdraw the choices listbox if the focus just has been passed to it.
+		  return if $w->focusCurrent == $w->Subwidget("ChoicesLabel");
+		  $w->Finish;
+	      });
 
     $class;
 }
@@ -135,7 +114,7 @@ sub Populate {
 		 $w->Callback(-cancelcmd => $w);
 	     });
     $w->bind("<FocusIn>" => sub {
-		 # If the focus is passed to the entry widget by <Shift-Tab>,
+		 # If the focus is passed to the entry widget by <Tab> or <Shift-Tab>,
 		 # all text in the widget gets selected. This might lateron cause
 		 # unintended deletion when pressing a key.
 		 $w->selectionClear();
@@ -205,6 +184,8 @@ sub Populate {
 	 -cancelcmd   => ['CALLBACK'],
 	 -cancelcommand => '-cancelcmd',
 	 -messagecmd  => ['CALLBACK', undef, undef, ['_show_msg']],
+	 -complpath    => ['PASSIVE', undef, undef, '<Tab>'],
+	 -path_completion => '-complpath',
 	 -height        => [$choices_l, qw/height Height 10/],
 	 -dircolor      => ['PASSIVE',  undef, undef, undef],
 	);
@@ -212,6 +193,8 @@ sub Populate {
 
 sub ConfigChanged {
     my($w,$args) = @_;
+
+    _bind_completion(@_);   # Bind the user-defined completion key
     $w->{max_show} = $w->cget(-height);   # save original height of the listbox
     for (qw/dir file/) {
 	if (defined $args->{'-initial' . $_}) {
@@ -408,6 +391,59 @@ sub _show_choices {
 
 sub _is_dir { -d $_[1] }
 
+# Bind the user-defined completion key
+
+sub _bind_completion {
+    my($w,$args) = @_;
+
+    if ($Tk::platform eq 'MSWin32'  and  $args->{-complpath} eq '<Alt-Tab>') {
+	my $msg = 'Event "Alt-Tab" is reserved by the Operating System; use "Tab" instead.';
+	$w->Callback(-messagecmd => $w, "Option -path_completion: $msg");
+	$args->{-complpath} = '<Tab>';
+    }
+    eval {$w->bind($args->{-complpath} => \&_complete_current_path)};
+    if ($@) {
+	(my $msg = $@) =~ s/ at .+/; use "Tab" instead./s;   # cut off line info
+	$w->Callback(-messagecmd => $w, "Option -path_completion: $msg");
+	$args->{-complpath} = '<Tab>';
+	$w->bind('<Tab>' => \&_complete_current_path);
+    }
+    # Restore standard behaviour of Shift-Tab
+    if ($args->{-complpath} eq '<Tab>') {
+	$w->bind('<Shift-Tab>' => sub {$w->focusPrev});
+    }
+}
+
+# Callback to force the completion of the current path
+
+sub _complete_current_path {
+    my $w = shift;
+
+    if (!defined $w->{CurrentChoices}) {
+	# this is called only on init:
+	my $pathref = $w->cget(-textvariable);
+	my $pathname = $$pathref;
+	$w->{CurrentChoices} = $w->Callback(-choicescmd => $w, $pathname);
+    }
+    if (@{$w->{CurrentChoices}} > 0) {
+	my $pos_sep_rx = $w->_pos_sep_rx;
+	my $common = $w->_common_match;
+	my $case_rx = $w->cget(-casesensitive) ? "" : "(?i)";
+	if ($w->Callback(-isdircmd => $w, $common) &&
+	    $common !~ m/$case_rx$pos_sep_rx$/             &&
+	    @{$w->{CurrentChoices}} == 1
+	   ) {
+	    my $sep = $w->_sep;
+	    $common .= $sep;
+	}
+	$w->_set_text($common);
+	$w->_popup_on_key($common);
+    } else {
+	$w->bell;
+    }
+    Tk->break;
+}
+
 # Replace text in widget and position the cursor to the end
 
 sub _set_text {
@@ -462,7 +498,7 @@ sub _dircolor {
 
     foreach (0 .. $choices_l->size - 1) {
 	# Take full path from CurrentChoices array
-	$path = $w->{CurrentChoices}[$w->{ChoicesTop} + $_];
+	$path = $w->{CurrentChoices}[$_];
 	$choices_l->itemconfigure($_, -foreground => $dircolor)
 	    if $w->Callback(-isdircmd => $w, $path);
     }
@@ -555,6 +591,12 @@ C<-cancelcommand>.
 
 If this is set to true, and there remains only one item in the
 choice listbox, it will be transferred to the entry value automatically.
+
+=item -complpath
+
+This defines the event that will force the completion of the current path. Alias: C<-path_completion>.
+By default the C<Tab> key will be used. B<Note>: This default conflicts with the standard use
+of the C<Tab> key to move the focus to the next widget.
 
 =item -messagecmd
 
