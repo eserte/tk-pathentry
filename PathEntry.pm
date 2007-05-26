@@ -1,7 +1,7 @@
 # -*- perl -*-
 
 #
-# $Id: PathEntry.pm,v 1.16 2007/05/26 15:59:07 k_wittrock Exp $
+# $Id: PathEntry.pm,v 1.17 2007/05/26 16:01:23 k_wittrock Exp $
 # Author: Slaven Rezic
 #
 # Copyright (C) 2001,2002,2003 Slaven Rezic. All rights reserved.
@@ -16,7 +16,7 @@ package Tk::PathEntry;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = sprintf("%d.%02d", q$Revision: 1.16 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.17 $ =~ /(\d+)\.(\d+)/);
 
 use base qw(Tk::Derived Tk::Entry);
 
@@ -47,6 +47,9 @@ sub ClassInit {
 	$mw->bind($class,"<$_-d>"         => '_delete_next_path_component');
 	$mw->bind($class,"<$_-f>"         => '_forward_path_component');
 	$mw->bind($class,"<$_-b>"         => '_backward_path_component');
+	$mw->bind($class,"<$_-Delete>"    => '_delete_next_path_component');
+	$mw->bind($class,"<$_-Right>"     => '_forward_path_component');
+	$mw->bind($class,"<$_-Left>"      => '_backward_path_component');
     }
     $mw->bind($class,"<FocusOut>" => sub {
 		  my $w = shift;
@@ -631,6 +634,35 @@ automatically if the user selects an entry from the listbox, hits the
 Return or Escape key or the widget loses the focus.
 
 =back
+
+
+=head1 BINDINGS
+
+The C<PathEntry> widget has the same bindings as the L<Entry|Tk::Entry> widget,
+exept for C<FocusOut>, which is used internally.
+In addition there are the following bindings:
+
+=over 4
+
+=item Alt-Backspace I<or> Meta-Backspace
+
+Deletes the path component to the left of the cursor.
+
+=item Alt-d I<or> Meta-d I<or> Alt-Delete I<or> Meta-Delete
+
+Deletes the path component to the right of the cursor.
+
+=item Alt-f I<or> Meta-f I<or> Alt-Right_arrow I<or> Meta-Right_arrow
+
+Moves the cursor one path component to the right.
+
+=item Alt-b I<or> Meta-b I<or> Alt-Left_arrow I<or> Meta-Left_arrow
+
+Moves the cursor one path component to the left.
+
+=back
+
+There is also a user-defined binding, see option C<-complpath>.
 
 =head1 EXAMPLES
 
