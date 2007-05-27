@@ -1,7 +1,7 @@
 # -*- perl -*-
 
 #
-# $Id: PathEntry.pm,v 1.18 2007/05/27 17:01:27 k_wittrock Exp $
+# $Id: PathEntry.pm,v 1.19 2007/05/27 17:03:40 k_wittrock Exp $
 # Author: Slaven Rezic
 #
 # Copyright (C) 2001,2002,2003 Slaven Rezic. All rights reserved.
@@ -16,7 +16,7 @@ package Tk::PathEntry;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = sprintf("%d.%02d", q$Revision: 1.18 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.19 $ =~ /(\d+)\.(\d+)/);
 
 use base qw(Tk::Derived Tk::Entry);
 
@@ -67,11 +67,21 @@ sub ClassInit {
 sub _bind_return {
     my $w = shift;
     $w->Finish;
-    $w->Callback(-selectcmd => $w);
+    $w->_exec_selectcmd;
 };
 
 sub Populate {
     my($w, $args) = @_;
+
+    # Set proper encoding for file operations
+    if ($Tk::VERSION >= 804 && eval { require Encode; 1 }) {
+	my $encoding;
+	if    ($^O eq 'MSWin32') {$encoding = 'windows-1252'}
+#	elsif ($^O eq '.....')   {$encoding = '.....'}    # add known encodings for other platforms
+#	elsif ($^O eq '.....')   {$encoding = '.....'}    # see perldoc perlport for OS names
+	else                     {$encoding = 'iso-8859-1'}
+	$w->{Encoding} = $encoding;
+    }
 
     my $choices_t = $w->Component("Toplevel" => "ChoicesToplevel");
     $choices_t->overrideredirect(1);
@@ -219,6 +229,9 @@ sub Finish {
 sub _popup_on_key {
     my($w, $pathname) = @_;
     if ($w->ismapped) {
+	if ($w->{Encoding}) {
+	    $pathname = Encode::encode("$w->{Encoding}", $pathname);
+	}
 	$w->{CurrentChoices} = $w->Callback(-choicescmd => $w, $pathname);
 	if ($w->{CurrentChoices} && @{$w->{CurrentChoices}} > 1) {
 	    my $choices_l = $w->Subwidget("ChoicesLabel");
@@ -422,6 +435,9 @@ sub _complete_current_path {
 	# this is called only on init:
 	my $pathref = $w->cget(-textvariable);
 	my $pathname = $$pathref;
+	if ($w->{Encoding}) {
+	    $pathname = Encode::encode("$w->{Encoding}", $pathname);
+	}
 	$w->{CurrentChoices} = $w->Callback(-choicescmd => $w, $pathname);
     }
     if (@{$w->{CurrentChoices}} > 0) {
@@ -441,6 +457,19 @@ sub _complete_current_path {
 	$w->bell;
     }
     Tk->break;
+}
+
+# Execute the -selectcmd callback
+# pass encoded path as 2nd parameter
+
+sub _exec_selectcmd {
+    my $w = shift;
+
+    my $pathname = $ {$w->cget(-textvariable)};
+    if ($w->{Encoding}) {
+	$pathname = Encode::encode("$w->{Encoding}", $pathname);
+    }
+    $w->Callback(-selectcmd => $w, $pathname);
 }
 
 # Replace text in widget and position the cursor to the end
@@ -577,9 +606,11 @@ default is a subroutine using the standard C<glob> function.
 
 =item -selectcmd
 
-This will be called if a path is selected, either by hitting the
-Return key or by clicking on the choice listbox. Alias:
-C<-selectcommand>.
+This will be called if a path is selected by hitting the
+Return key in the Entry widget. Alias: C<-selectcommand>.
+The encoded path name is passed as second parameter, ready for use in
+file operations. You may access the path name as an utf8-string via your 
+C<-textvariable> or with C<< $pe->get() >>.
 
 =item -cancelcmd
 
@@ -661,6 +692,15 @@ Moves the cursor one path component to the left.
 There is also a user-defined binding, see option C<-complpath>.
 
 =head1 EXAMPLES
+
+    use Tk::PathEntry;
+    my $pe = $mw->PathEntry
+        (-autocomplete => 1,
+	 -path_completion => '<Control-Tab>',
+	 -selectcmd => sub {my $f = $_[1]; 
+	                    open(OUT, '>', $f) || die "cannot open file $f\n";
+                           },
+        )->pack(-fill => 'x', -expand => 1);
 
 If you want to not require from your users to install Tk::PathEntry,
 you can use the following code snippet to create either a PathEntry or
