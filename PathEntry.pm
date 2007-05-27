@@ -1,7 +1,7 @@
 # -*- perl -*-
 
 #
-# $Id: PathEntry.pm,v 1.17 2007/05/26 16:01:23 k_wittrock Exp $
+# $Id: PathEntry.pm,v 1.18 2007/05/27 17:01:27 k_wittrock Exp $
 # Author: Slaven Rezic
 #
 # Copyright (C) 2001,2002,2003 Slaven Rezic. All rights reserved.
@@ -16,7 +16,7 @@ package Tk::PathEntry;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = sprintf("%d.%02d", q$Revision: 1.17 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.18 $ =~ /(\d+)\.(\d+)/);
 
 use base qw(Tk::Derived Tk::Entry);
 
@@ -57,18 +57,18 @@ sub ClassInit {
 		  return if $w->focusCurrent == $w->Subwidget("ChoicesLabel");
 		  $w->Finish;
 	      });
+    $mw->bind($class,"<Return>" => \&_bind_return);
 
     $class;
 }
 
-sub SetBindtags{
-    my($w) = @_;
+# Class binding for <Return>
 
-    # Execute the widget bindings before the class bindings
-    $w->SUPER::SetBindtags;
-    my (@w_bindtags) = $w->bindtags;
-    $w->bindtags( [ @w_bindtags[1, 0, 2, 3] ] );
-}
+sub _bind_return {
+    my $w = shift;
+    $w->Finish;
+    $w->Callback(-selectcmd => $w);
+};
 
 sub Populate {
     my($w, $args) = @_;
@@ -102,11 +102,7 @@ sub Populate {
 		 }
 		 $w->Finish;
 	     });
-    # <Return> in the Entry
-    $w->bind("<Return>" => sub {
-		 $w->Finish;
-		 $w->Callback(-selectcmd => $w);
-	     });
+    # <Return> in the Entry is now a class binding
     # <Escape> in the Listbox
     $choices_l->bind("<Escape>" => sub {
 		 $w->Finish;
