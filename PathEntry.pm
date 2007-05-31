@@ -1,7 +1,7 @@
 # -*- perl -*-
 
 #
-# $Id: PathEntry.pm,v 1.19 2007/05/27 17:03:40 k_wittrock Exp $
+# $Id: PathEntry.pm,v 1.20 2007/05/31 16:18:33 k_wittrock Exp $
 # Author: Slaven Rezic
 #
 # Copyright (C) 2001,2002,2003 Slaven Rezic. All rights reserved.
@@ -16,7 +16,7 @@ package Tk::PathEntry;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = sprintf("%d.%02d", q$Revision: 1.19 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.20 $ =~ /(\d+)\.(\d+)/);
 
 use base qw(Tk::Derived Tk::Entry);
 
@@ -87,11 +87,16 @@ sub Populate {
     $choices_t->overrideredirect(1);
     $choices_t->withdraw;
 
-    my $choices_l = $choices_t->Listbox(-background => "yellow",
+    my $choices_l = $choices_t->Listbox(
 					-border => 0,
 					-width => 0,    # use autowidth feature
 				       )->pack(-fill => "both",
 					       -expand => 1);
+    if ($Tk::platform eq 'MSWin32') {
+	$choices_l->configure(-border => 1, -relief => 'solid');
+    } else {
+	$choices_l->configure(-background => 'yellow');
+    }
     $w->Advertise("ChoicesLabel" => $choices_l);
     # <Button-1> in the Listbox
     $choices_l->bind("<1>" => sub {
@@ -152,6 +157,8 @@ sub Populate {
 	if ($action == 1 && # only on INSERT
 	    $w->{CurrentChoices} && @{$w->{CurrentChoices}} == 1 &&
 	    $w->cget(-autocomplete)) {
+	    # autocomplete annoys when the user is entering a drive name
+	    return 1 if ($^O eq 'MSWin32' && length($pathname) == 1);
 	    # XXX the afterIdle is hackish
 	    $w->afterIdle(sub { $w->_set_text($w->{CurrentChoices}[0]) });
 	    return 0;
@@ -165,6 +172,9 @@ sub Populate {
 	my $pathname;
 	$args->{-textvariable} = \$pathname;
     }
+    # avoid undefined initial pathname
+    # needed when the user enters <Return> right at the beginning
+    ${$args->{-textvariable}} = '' unless defined ${$args->{-textvariable}};
 
     # validate directory color
     eval {$w->rgb($args->{-dircolor})} if exists $args->{-dircolor};
@@ -332,15 +342,15 @@ sub _backward_path_component {
 
 sub _common_match {
     my $w = shift;
-    my(@choices) = @{$w->{CurrentChoices}};
-    my $common = shift @choices;
+    my $choices = $w->{CurrentChoices};
     my $case_sensitive = $w->cget(-casesensitive);
-    foreach (@choices) {
-	my $choice = $case_sensitive ? $_ : lc $_;
+    my $common = $choices->[0];
+    $common = lc $common if !$case_sensitive;
+    foreach my $j (1 .. $#{$choices}) {
+	my $choice = $case_sensitive ? $choices->[$j] : lc $choices->[$j];
 	if (length $choice < length $common) {
-	    $common = substr($common, 0, length $_);
+	    substr($common, length $choice) = '';
 	}
-	$common = lc $common if !$case_sensitive;
 	for my $i (0 .. length($common) - 1) {
 	    if (substr($choice, $i, 1) ne substr($common, $i, 1)) {
 		return "" if $i == 0;
@@ -349,6 +359,8 @@ sub _common_match {
 	    }
 	}
     }
+    # Restore original case
+    $common = substr($choices->[0], 0, length($common)) if !$case_sensitive;
     $common;
 }
 
@@ -609,7 +621,7 @@ default is a subroutine using the standard C<glob> function.
 This will be called if a path is selected by hitting the
 Return key in the Entry widget. Alias: C<-selectcommand>.
 The encoded path name is passed as second parameter, ready for use in
-file operations. You may access the path name as an utf8-string via your 
+file operations. You may access the path name as a utf8-string via your 
 C<-textvariable> or with C<< $pe->get() >>.
 
 =item -cancelcmd
