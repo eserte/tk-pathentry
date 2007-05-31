@@ -1,7 +1,7 @@
 # -*- perl -*-
 
 #
-# $Id: PathEntry.pm,v 1.20 2007/05/31 16:18:33 k_wittrock Exp $
+# $Id: PathEntry.pm,v 1.21 2007/05/31 16:27:35 k_wittrock Exp $
 # Author: Slaven Rezic
 #
 # Copyright (C) 2001,2002,2003 Slaven Rezic. All rights reserved.
@@ -16,7 +16,7 @@ package Tk::PathEntry;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = sprintf("%d.%02d", q$Revision: 1.20 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.21 $ =~ /(\d+)\.(\d+)/);
 
 use base qw(Tk::Derived Tk::Entry);
 
@@ -193,16 +193,17 @@ sub Populate {
 	 -casesensitive => ['PASSIVE', undef, undef,
 			    $^O eq "MSWin32" ? 0 : 1
 			    ],
+	 -autocomplete => ['PASSIVE'],
 	 -isdircmd    => ['CALLBACK', undef, undef, ['_is_dir']],
 	 -isdirectorycommand => '-isdircmd',
 	 -choicescmd  => ['CALLBACK', undef, undef, ['_get_choices']],
 	 -choicescommand     => '-choicescmd',
-	 -autocomplete => ['PASSIVE'],
 	 -selectcmd   => ['CALLBACK'],
 	 -selectcommand => '-selectcmd',
 	 -cancelcmd   => ['CALLBACK'],
 	 -cancelcommand => '-cancelcmd',
 	 -messagecmd  => ['CALLBACK', undef, undef, ['_show_msg']],
+	 -messagecommand => '-messagecmd',
 	 -complpath    => ['PASSIVE', undef, undef, '<Tab>'],
 	 -path_completion => '-complpath',
 	 -height        => [$choices_l, qw/height Height 10/],
@@ -604,16 +605,21 @@ default the characters C</> and C<\>, otherwise just C</>.
 Set to a true value if the filesystem is case sensitive. For Windows,
 this is by default false, otherwise true.
 
+=item -autocomplete
+
+If this is set to a C<true> value, and there remains only one item in the
+choices listbox, it will be transferred to the Entry widget automatically.
+
 =item -isdircmd
 
-Can be used to set another directory recognizing subroutine. The
-directory name is passed as second parameter. Alias:
-C<-isdirectorycommand>. The default is a subroutine using C<-d>.
+Can be used to set another directory recognizing subroutine. Alias:
+C<-isdirectorycommand>. The directory name is passed as second parameter.
+The default is a subroutine using C<-d>.
 
 =item -choicescmd
 
-Can be used to set another globbing subroutine. The current pathname
-is passed as second parameter. Alias: C<-choicescommand>. The
+Can be used to set another globbing subroutine. Alias: C<-choicescommand>. 
+The current pathname is passed as second parameter. The
 default is a subroutine using the standard C<glob> function.
 
 =item -selectcmd
@@ -626,13 +632,17 @@ C<-textvariable> or with C<< $pe->get() >>.
 
 =item -cancelcmd
 
-This will be called if the Escape key is pressed. Alias:
+This will be called if the Escape key is pressed in the Entry widget. Alias:
 C<-cancelcommand>.
 
-=item -autocomplete
+=item -messagecmd
 
-If this is set to true, and there remains only one item in the
-choice listbox, it will be transferred to the entry value automatically.
+Can be used to set a different subroutine for displaying messages. 
+Alias: C<-messagecommand>. The
+message is passed as the second parameter. Examples are 
+C<< -messagecmd => sub {print "$_[1]\n"} >>, C<< -messagecmd => sub {$_[0]->bell} >>,
+or even C<< -messagecmd => undef >>. The default is a subroutine using
+C<messageBox>. 
 
 =item -complpath
 
@@ -640,25 +650,17 @@ This defines the event that will force the completion of the current path. Alias
 By default the C<Tab> key will be used. B<Note>: This default conflicts with the standard use
 of the C<Tab> key to move the focus to the next widget.
 
-=item -messagecmd
-
-Can be used to set a different subroutine for displaying messages. The
-message is passed as the second parameter. Examples are 
-C<-messagecmd => sub {print "$_[1]\n"}>, C<-messagecmd => sub {$_[0]->bell}>,
-or even C<-messagecmd => undef>. The default is a subroutine using
-C<messageBox>. 
-
-=item -dircolor
-
-This defines the color for marking directories in the choice listbox. By default 
-directories are not marked.
-
 =item -height
 
-Set the height of the choice listbox. The default is 10 lines. If height 
+This sets the height of the choices listbox. The default is 10 lines. If height 
 is negative, the displayed height changes
 dynamically, and the absolute value gives the maximum displayed height.
 If height is zero, there is no maximum.
+
+=item -dircolor
+
+This defines the color for marking directories in the choices listbox. By default 
+directories are not marked.
 
 =back
 
@@ -674,14 +676,44 @@ Return or Escape key or the widget loses the focus.
 
 =back
 
+=head1 ADVERTISED SUBWIDGETS
+
+See L<Tk::mega/"Subwidget"> how to use advertised widgets.
+
+=over 4
+
+=item ChoicesLabel
+
+The Listbox widget that holds the completion choices.
+
+=item ChoicesToplevel
+
+The Toplevel widget for the completion choices.
+
+=back
+
 
 =head1 BINDINGS
 
-The C<PathEntry> widget has the same bindings as the L<Entry|Tk::Entry> widget,
+=head2 Bindings of the Entry widget
+
+The B<PathEntry> widget has the same bindings as the L<Entry|Tk::Entry> widget,
 exept for C<FocusOut>, which is used internally.
 In addition there are the following bindings:
 
 =over 4
+
+=item Down_arrow
+
+Pops up the window with the completion choices and transfers the focus to it.
+
+=item Return
+
+Calls C<Finish> and invokes the C<-selectcmd> callback.
+
+=item Escape
+
+Calls C<Finish> and invokes the C<-cancelcmd> callback.
 
 =item Alt-Backspace I<or> Meta-Backspace
 
@@ -703,18 +735,40 @@ Moves the cursor one path component to the left.
 
 There is also a user-defined binding, see option C<-complpath>.
 
+=head2 Bindings of the Listbox widget
+
+The choices listbox of the B<PathEntry> widget uses all bindings of 
+the L<Listbox|Tk::Listbox> widget.
+In addition there are the following bindings:
+
+=over 4
+
+=item Return
+
+Transfers the selected choice to the Entry widget and calls C<Finish>.
+
+=item Escape
+
+Calls C<Finish>.
+
+=item Button-1
+
+Transfers the clicked choice to the Entry widget and calls C<Finish>.
+
+=back
+
 =head1 EXAMPLES
 
     use Tk::PathEntry;
     my $pe = $mw->PathEntry
         (-autocomplete => 1,
-	 -path_completion => '<Control-Tab>',
+	 -path_completion => '<F5>',
 	 -selectcmd => sub {my $f = $_[1]; 
 	                    open(OUT, '>', $f) || die "cannot open file $f\n";
                            },
         )->pack(-fill => 'x', -expand => 1);
 
-If you want to not require from your users to install Tk::PathEntry,
+If you want to not require from your users to install B<Tk::PathEntry>,
 you can use the following code snippet to create either a PathEntry or
 an Entry, depending on what is installed:
 
@@ -735,16 +789,6 @@ an Entry, depending on what is installed:
 
 Since C<Tk::PathEntry> version 2.17, it is not recommended to bind the
 Return key directly. Use the C<-selectcmd> option instead.
-
-=head1 TODO
-
-=over
-
-=item * Check color settings on Windows
-
-=item * Add ctrl-tab or another key as tab replacement
-
-=back
 
 =head1 SEE ALSO
 
