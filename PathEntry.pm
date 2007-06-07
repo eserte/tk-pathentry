@@ -1,7 +1,7 @@
 # -*- perl -*-
 
 #
-# $Id: PathEntry.pm,v 1.22 2007/06/07 17:00:05 k_wittrock Exp $
+# $Id: PathEntry.pm,v 1.23 2007/06/07 17:02:46 k_wittrock Exp $
 # Author: Slaven Rezic
 #
 # Copyright (C) 2001,2002,2003 Slaven Rezic. All rights reserved.
@@ -16,7 +16,7 @@ package Tk::PathEntry;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = sprintf("%d.%02d", q$Revision: 1.22 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.23 $ =~ /(\d+)\.(\d+)/);
 
 use base qw(Tk::Derived Tk::Entry);
 
@@ -89,7 +89,7 @@ sub Populate {
     # Set proper encoding for file operations
     if ($Tk::VERSION >= 804 && eval { require Encode; 1 }) {
 	my $encoding;
-	if    ($^O eq 'MSWin32') {$encoding = 'windows-1252'}
+	if    ($^O eq 'MSWin32') {$encoding = Win32_encod()}
 #	elsif ($^O eq '.....')   {$encoding = '.....'}    # add known encodings for other platforms
 #	elsif ($^O eq '.....')   {$encoding = '.....'}    # see perldoc perlport for OS names
 	else                     {$encoding = 'iso-8859-1'}
@@ -567,6 +567,13 @@ sub _show_msg {
 	-icon => 'warning', -message => $msg);
 }
 
+# For Windows OS, find out the encoding of perl's console window
+
+sub Win32_encod {
+    return eval { require Win32::Console; 1 } ?
+	'windows-' . Win32::Console->new()->OutputCP : 'windows-850';
+}
+
 1;
 
 __END__
@@ -637,7 +644,7 @@ default is a subroutine using the standard C<glob> function.
 
 =item -selectcmd
 
-This will be called if a path is selected by hitting the
+# For Windows OS, find out the encoding of perl's console window
 Return key in the Entry widget. Alias: C<-selectcommand>.
 The encoded path name is passed as second parameter, ready for use in
 file operations. You may access the path name as a utf8-string via your 
@@ -645,7 +652,7 @@ C<-textvariable> or with C<< $pe->get() >>.
 
 =item -cancelcmd
 
-This will be called if the Escape key is pressed in the Entry widget. Alias:
+This subroutine will be called if the Escape key is pressed in the Entry widget. Alias:
 C<-cancelcommand>.
 
 =item -messagecmd
