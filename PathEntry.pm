@@ -1,7 +1,7 @@
 # -*- perl -*-
 
 #
-# $Id: PathEntry.pm,v 1.21 2007/05/31 16:27:35 k_wittrock Exp $
+# $Id: PathEntry.pm,v 1.22 2007/06/07 17:00:05 k_wittrock Exp $
 # Author: Slaven Rezic
 #
 # Copyright (C) 2001,2002,2003 Slaven Rezic. All rights reserved.
@@ -16,7 +16,7 @@ package Tk::PathEntry;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = sprintf("%d.%02d", q$Revision: 1.21 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.22 $ =~ /(\d+)\.(\d+)/);
 
 use base qw(Tk::Derived Tk::Entry);
 
@@ -55,7 +55,20 @@ sub ClassInit {
 		  my $w = shift;
 		  # Don't withdraw the choices listbox if the focus just has been passed to it.
 		  return if $w->focusCurrent == $w->Subwidget("ChoicesLabel");
-		  $w->Finish;
+		  # Note: A button 1 mouse click in the choices listbox will invoke the
+		  # FocusOut callback of the Entry widget before invoking the Button-1
+		  # of the choices listbox, if the focus is in the Entry at that moment.
+		  # In this case $w->focusCurrent is undefined. The Button-1 callback will
+		  #  withdraw the choices listbox.
+		  return unless defined $w->focusCurrent;
+		  # This queer situation can be reproduced on Windows OS as follows:
+		  # Klick on a directory that is displayed below the PathEntry::Dialog;
+		  # Enter <Tab> or / to get the next choices list;
+		  # Select the 2nd choice at a point above the OK button.
+		  # Apparently this situation doesn't do any harm.
+		  # return if $w->focusCurrent eq $w;
+		  my $choices_t = $w->Component("Toplevel" => "ChoicesToplevel");
+		  $choices_t->withdraw;
 	      });
     $mw->bind($class,"<Return>" => \&_bind_return);
 
