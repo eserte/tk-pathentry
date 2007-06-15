@@ -1,7 +1,7 @@
 # -*- perl -*-
 
 #
-# $Id: PathEntry.pm,v 1.24 2007/06/15 16:36:19 k_wittrock Exp $
+# $Id: PathEntry.pm,v 1.25 2007/06/15 16:40:29 k_wittrock Exp $
 # Author: Slaven Rezic
 #
 # Copyright (C) 2001,2002,2003 Slaven Rezic. All rights reserved.
@@ -16,7 +16,7 @@ package Tk::PathEntry;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = sprintf("%d.%02d", q$Revision: 1.24 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.25 $ =~ /(\d+)\.(\d+)/);
 
 use base qw(Tk::Derived Tk::Entry);
 
@@ -161,7 +161,7 @@ sub Populate {
 
 	# validate directory on input of separator
 	if ($action == 1) {
-	    my $pos_sep_rx = $w->_pos_sep_rx;
+	    my $pos_sep_rx = $w->{pos_sep_rx};
 	    my $case_rx = $w->cget(-casesensitive) ? "" : "(?i)";
 	    $w->_valid_dir('Path', @_) if $pathname =~ /$case_rx$pos_sep_rx$/;
 	}
@@ -198,7 +198,7 @@ sub Populate {
 	(-initialdir  => ['PASSIVE',  undef, undef, undef],
 	 -initialfile => ['PASSIVE',  undef, undef, undef],
 	 -separator   => ['PASSIVE',  undef, undef,
-			  $^O eq "MSWin32" ? ["\\", "/"] : "/"
+			  $^O eq "MSWin32" ? ["/", "\\"] : "/"
 			  ],
 	 -casesensitive => ['PASSIVE', undef, undef,
 			    $^O eq "MSWin32" ? 0 : 1
@@ -224,13 +224,18 @@ sub Populate {
 sub ConfigChanged {
     my($w,$args) = @_;
 
+    # Call separator subroutines only once.
+    $w->{sep} = $w->_sep;
+    $w->{pos_sep_rx} = $w->_pos_sep_rx;
+    $w->{neg_sep_rx} = $w->_neg_sep_rx;
+
     _bind_completion(@_);   # Bind the user-defined completion key
     $w->{max_show} = $w->cget(-height);   # save original height of the listbox
 
     my $initpath = '';
     if (defined $args->{'-initialdir'}) {
 	if (defined $args->{'-initialfile'}) {
-	    my $sep = $w->_sep;
+	    my $sep = $w->{sep};
 	    $initpath = $args->{'-initialdir'} . $sep . $args->{'-initialfile'};
 	} else {
 	    $initpath = $args->{'-initialdir'};
@@ -317,8 +322,8 @@ sub _delete_last_path_component {
 
     my $before_cursor = substr($w->get, 0, $w->index("insert"));
     my $after_cursor = substr($w->get, $w->index("insert"));
-    my $pos_sep = $w->_pos_sep_rx;
-    my $neg_sep = $w->_neg_sep_rx;
+    my $pos_sep = $w->{pos_sep_rx};
+    my $neg_sep = $w->{neg_sep_rx};
     $before_cursor =~ s|$neg_sep+$pos_sep?$||;
     my $pathref = $w->cget(-textvariable);
     $$pathref = $before_cursor . $after_cursor;
@@ -331,8 +336,8 @@ sub _delete_next_path_component {
 
     my $before_cursor = substr($w->get, 0, $w->index("insert"));
     my $after_cursor = substr($w->get, $w->index("insert"));
-    my $pos_sep = $w->_pos_sep_rx;
-    my $neg_sep = $w->_neg_sep_rx;
+    my $pos_sep = $w->{pos_sep_rx};
+    my $neg_sep = $w->{neg_sep_rx};
     $after_cursor =~ s|^$pos_sep?$neg_sep+||;
     my $pathref = $w->cget(-textvariable);
     $$pathref = $before_cursor . $after_cursor;
@@ -343,8 +348,8 @@ sub _delete_next_path_component {
 sub _forward_path_component {
     my $w = shift;
     my $after_cursor = substr($w->get, $w->index("insert"));
-    my $pos_sep = $w->_pos_sep_rx;
-    my $neg_sep = $w->_neg_sep_rx;
+    my $pos_sep = $w->{pos_sep_rx};
+    my $neg_sep = $w->{neg_sep_rx};
     if ($after_cursor =~ m|^($pos_sep?$neg_sep+)|) {
 	$w->icursor($w->index("insert") + length $1);
     }
@@ -353,8 +358,8 @@ sub _forward_path_component {
 sub _backward_path_component {
     my $w = shift;
     my $before_cursor = substr($w->get, 0, $w->index("insert"));
-    my $pos_sep = $w->_pos_sep_rx;
-    my $neg_sep = $w->_neg_sep_rx;
+    my $pos_sep = $w->{pos_sep_rx};
+    my $neg_sep = $w->{neg_sep_rx};
     if ($before_cursor =~ m|($neg_sep+$pos_sep?)$|) {
 	$w->icursor($w->index("insert") - length $1);
     }
@@ -386,11 +391,11 @@ sub _common_match {
 
 sub _get_choices {
     my($w, $pathname) = @_;
-    my $neg_sep = $w->_neg_sep_rx;
+    my $neg_sep = $w->{neg_sep_rx};
     if ($pathname =~ m|^~($neg_sep+)$|) {
 	my $userglob = $1;
 	my @users;
-	my $sep = $w->_sep;
+	my $sep = $w->{sep};
 	while(my $user = getpwent) {
 	    if ($user =~ /^$userglob/) {
 		push @users, "~$user$sep";
@@ -473,14 +478,14 @@ sub _complete_current_path {
 	$w->{CurrentChoices} = $w->Callback(-choicescmd => $w, $pathname);
     }
     if (@{$w->{CurrentChoices}} > 0) {
-	my $pos_sep_rx = $w->_pos_sep_rx;
+	my $pos_sep_rx = $w->{pos_sep_rx};
 	my $common = $w->_common_match;
 	my $case_rx = $w->cget(-casesensitive) ? "" : "(?i)";
 	if ($w->Callback(-isdircmd => $w, $common) &&
 	    $common !~ m/$case_rx$pos_sep_rx$/             &&
 	    @{$w->{CurrentChoices}} == 1
 	   ) {
-	    my $sep = $w->_sep;
+	    my $sep = $w->{sep};
 	    $common .= $sep;
 	}
 	$w->_set_text($common);
@@ -520,7 +525,7 @@ sub _valid_dir {
     my ($w, $type, $pathname) = @_;
 
     # remove trailing separators
-    my $pos_sep_rx = $w->_pos_sep_rx;
+    my $pos_sep_rx = $w->{pos_sep_rx};
     my $case_rx = $w->cget(-casesensitive) ? "" : "(?i)";
     $pathname =~ s/$case_rx$pos_sep_rx+$//;
     return unless $pathname;
@@ -539,7 +544,7 @@ sub _insert_pathnames {
     my $choices = $w->{CurrentChoices};
 
     # Show last component of file names
-    my $pos_sep_rx = $w->_pos_sep_rx;
+    my $pos_sep_rx = $w->{pos_sep_rx};
     my $case_rx = $w->cget(-casesensitive) ? "" : "(?i)";
     if (@{$choices}[0] =~ /(.*$case_rx$pos_sep_rx)./) {
 	my $first = length($1);
