@@ -1,7 +1,7 @@
 # -*- perl -*-
 
 #
-# $Id: PathEntry.pm,v 1.23 2007/06/07 17:02:46 k_wittrock Exp $
+# $Id: PathEntry.pm,v 1.24 2007/06/15 16:36:19 k_wittrock Exp $
 # Author: Slaven Rezic
 #
 # Copyright (C) 2001,2002,2003 Slaven Rezic. All rights reserved.
@@ -16,7 +16,7 @@ package Tk::PathEntry;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = sprintf("%d.%02d", q$Revision: 1.23 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.24 $ =~ /(\d+)\.(\d+)/);
 
 use base qw(Tk::Derived Tk::Entry);
 
@@ -67,7 +67,7 @@ sub ClassInit {
 		  # Select the 2nd choice at a point above the OK button.
 		  # Apparently this situation doesn't do any harm.
 		  # return if $w->focusCurrent eq $w;
-		  my $choices_t = $w->Component("Toplevel" => "ChoicesToplevel");
+		  my $choices_t = $w->Subwidget("ChoicesToplevel");
 		  $choices_t->withdraw;
 	      });
     $mw->bind($class,"<Return>" => \&_bind_return);
@@ -185,9 +185,6 @@ sub Populate {
 	my $pathname;
 	$args->{-textvariable} = \$pathname;
     }
-    # avoid undefined initial pathname
-    # needed when the user enters <Return> right at the beginning
-    ${$args->{-textvariable}} = '' unless defined ${$args->{-textvariable}};
 
     # validate directory color
     eval {$w->rgb($args->{-dircolor})} if exists $args->{-dircolor};
@@ -229,14 +226,23 @@ sub ConfigChanged {
 
     _bind_completion(@_);   # Bind the user-defined completion key
     $w->{max_show} = $w->cget(-height);   # save original height of the listbox
-    for (qw/dir file/) {
-	if (defined $args->{'-initial' . $_}) {
-	    $w->_set_text($args->{'-initial' . $_});
+
+    my $initpath = '';
+    if (defined $args->{'-initialdir'}) {
+	if (defined $args->{'-initialfile'}) {
+	    my $sep = $w->_sep;
+	    $initpath = $args->{'-initialdir'} . $sep . $args->{'-initialfile'};
+	} else {
+	    $initpath = $args->{'-initialdir'};
 	}
+    } elsif (defined $args->{'-initialfile'}) {
+	$initpath = $args->{'-initialfile'};
     }
+    $w->_set_text($initpath);
+
     # validate initial directory
     $w->_valid_dir('Initial directory', $args->{'-initialdir'})
-	if (defined $args->{'-initialdir'}  &&  ! defined $args->{'-initialfile'});
+	if defined $args->{'-initialdir'};
 }
 
 sub Finish {
