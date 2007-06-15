@@ -1,7 +1,7 @@
 # -*- perl -*-
 
 #
-# $Id: PathEntry.pm,v 1.25 2007/06/15 16:40:29 k_wittrock Exp $
+# $Id: PathEntry.pm,v 1.26 2007/06/15 16:42:43 k_wittrock Exp $
 # Author: Slaven Rezic
 #
 # Copyright (C) 2001,2002,2003 Slaven Rezic. All rights reserved.
@@ -16,7 +16,7 @@ package Tk::PathEntry;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = sprintf("%d.%02d", q$Revision: 1.25 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.26 $ =~ /(\d+)\.(\d+)/);
 
 use base qw(Tk::Derived Tk::Entry);
 
@@ -229,7 +229,8 @@ sub ConfigChanged {
     $w->{pos_sep_rx} = $w->_pos_sep_rx;
     $w->{neg_sep_rx} = $w->_neg_sep_rx;
 
-    _bind_completion(@_);   # Bind the user-defined completion key
+    # Bind the user-defined completion key
+    $w->_bind_completion($args->{-complpath}) if defined $args->{-complpath};
     $w->{max_show} = $w->cget(-height);   # save original height of the listbox
 
     my $initpath = '';
@@ -443,22 +444,28 @@ sub _is_dir { -d $_[1] }
 # Bind the user-defined completion key
 
 sub _bind_completion {
-    my($w,$args) = @_;
+    my($w, $compl_event) = @_;
 
-    if ($Tk::platform eq 'MSWin32'  and  $args->{-complpath} eq '<Alt-Tab>') {
+    # When Tk::PathEntry is called indirectly via Tk::PathEntry::Dialog->Show,
+    # sub Populate will get called twice, first with the default value of the
+    # -complpath option, then with the user supplied value. Filter out the
+    # correct call.
+    return unless $compl_event eq $w->cget(-complpath);
+
+    if ($Tk::platform eq 'MSWin32'  and  $compl_event eq '<Alt-Tab>') {
 	my $msg = 'Event "Alt-Tab" is reserved by the Operating System; use "Tab" instead.';
 	$w->Callback(-messagecmd => $w, "Option -path_completion: $msg");
-	$args->{-complpath} = '<Tab>';
+	$compl_event = '<Tab>';
     }
-    eval {$w->bind($args->{-complpath} => \&_complete_current_path)};
+    eval {$w->bind($compl_event => \&_complete_current_path)};
     if ($@) {
 	(my $msg = $@) =~ s/ at .+/; use "Tab" instead./s;   # cut off line info
 	$w->Callback(-messagecmd => $w, "Option -path_completion: $msg");
-	$args->{-complpath} = '<Tab>';
+	$compl_event = '<Tab>';
 	$w->bind('<Tab>' => \&_complete_current_path);
     }
     # Restore standard behaviour of Shift-Tab
-    if ($args->{-complpath} eq '<Tab>') {
+    if ($compl_event eq '<Tab>') {
 	$w->bind('<Shift-Tab>' => sub {$w->focusPrev});
     }
 }
