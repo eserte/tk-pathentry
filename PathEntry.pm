@@ -1,7 +1,7 @@
 # -*- perl -*-
 
 #
-# $Id: PathEntry.pm,v 1.26 2007/06/15 16:42:43 k_wittrock Exp $
+# $Id: PathEntry.pm,v 1.27 2007/07/01 12:42:48 k_wittrock Exp $
 # Author: Slaven Rezic
 #
 # Copyright (C) 2001,2002,2003 Slaven Rezic. All rights reserved.
@@ -16,7 +16,7 @@ package Tk::PathEntry;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = sprintf("%d.%02d", q$Revision: 1.26 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.27 $ =~ /(\d+)\.(\d+)/);
 
 use base qw(Tk::Derived Tk::Entry);
 
@@ -187,6 +187,7 @@ sub Populate {
     }
 
     # validate directory color
+    undef $@;
     eval {$w->rgb($args->{-dircolor})} if exists $args->{-dircolor};
     if ($@) {
 	(my $msg = $@) =~ s/ at .+/ replaced by "blue"/s;
@@ -225,30 +226,18 @@ sub ConfigChanged {
     my($w,$args) = @_;
 
     # Call separator subroutines only once.
-    $w->{sep} = $w->_sep;
-    $w->{pos_sep_rx} = $w->_pos_sep_rx;
-    $w->{neg_sep_rx} = $w->_neg_sep_rx;
+    unless (defined $w->{sep}) {
+	$w->{sep} = $w->_sep;
+	$w->{pos_sep_rx} = $w->_pos_sep_rx;
+	$w->{neg_sep_rx} = $w->_neg_sep_rx;
+    }
+
+    # Set initial path
+    $w->_set_intial_path ($w->cget(-initialdir), $w->cget(-initialfile));
 
     # Bind the user-defined completion key
     $w->_bind_completion($args->{-complpath}) if defined $args->{-complpath};
     $w->{max_show} = $w->cget(-height);   # save original height of the listbox
-
-    my $initpath = '';
-    if (defined $args->{'-initialdir'}) {
-	if (defined $args->{'-initialfile'}) {
-	    my $sep = $w->{sep};
-	    $initpath = $args->{'-initialdir'} . $sep . $args->{'-initialfile'};
-	} else {
-	    $initpath = $args->{'-initialdir'};
-	}
-    } elsif (defined $args->{'-initialfile'}) {
-	$initpath = $args->{'-initialfile'};
-    }
-    $w->_set_text($initpath);
-
-    # validate initial directory
-    $w->_valid_dir('Initial directory', $args->{'-initialdir'})
-	if defined $args->{'-initialdir'};
 }
 
 sub Finish {
@@ -538,7 +527,8 @@ sub _valid_dir {
     return unless $pathname;
     if (-e $pathname  &&  ! $w->Callback(-isdircmd => $w, $pathname)) {
 	# $type is 'Path' or 'Initial directory'.
-	$w->Callback(-messagecmd => $w, "$type $pathname\nis not a directory");
+	$w->Callback(-messagecmd => $w,
+	    "$type $pathname\nis not a directory\n(exists as a plain file)");
         # Don't suppress or attempt to autocorrect the directory.
         # Give the user the chance to correct a typo error.
     }
@@ -590,6 +580,31 @@ sub _show_msg {
 sub Win32_encod {
     return eval { require Win32::Console; 1 } ?
 	'windows-' . Win32::Console->new()->OutputCP : 'windows-850';
+}
+
+# Set initial path in Entry widget
+
+sub _set_intial_path {
+    my ($w, $initdir, $initfile) = @_;
+
+    return if exists $w->{initpath};
+    $w->{initpath} = '';   # no need to re-execute on further calls of ConfigChanged
+    my $initpath = '';
+    if (defined $initdir) {
+	# Warn if "directory" exists as a plain file
+	$w->_valid_dir('Initial directory', $initdir);
+	$initpath = $initdir;
+	my $neg_sep = $w->{neg_sep_rx};
+	# add separator after existing dir or if $initfile will be appended
+	# unless there is already a separator
+	if (($w->Callback(-isdircmd => $w, $initdir)  or  
+	     (defined $initfile  and  $initfile ne ''))
+		 and  ($initdir =~ /$neg_sep$/)) {
+	        $initpath .= $w->{sep};
+	}
+    }
+    $initpath .= $initfile if defined $initfile;
+    $w->_set_text($initpath);
 }
 
 1;
