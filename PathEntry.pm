@@ -1,7 +1,7 @@
 # -*- perl -*-
 
 #
-# $Id: PathEntry.pm,v 1.27 2007/07/01 12:42:48 k_wittrock Exp $
+# $Id: PathEntry.pm,v 1.28 2007/07/01 12:47:00 k_wittrock Exp $
 # Author: Slaven Rezic
 #
 # Copyright (C) 2001,2002,2003 Slaven Rezic. All rights reserved.
@@ -16,7 +16,7 @@ package Tk::PathEntry;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = sprintf("%d.%02d", q$Revision: 1.27 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.28 $ =~ /(\d+)\.(\d+)/);
 
 use base qw(Tk::Derived Tk::Entry);
 
@@ -116,7 +116,10 @@ sub Populate {
 			 my $lb = shift;
 			 (my $sel) = $lb->curselection;
 			 # Take full path from CurrentChoices array
-			 $w->_set_text($w->{CurrentChoices}[$sel]);
+			 my $path = $w->{CurrentChoices}[$sel];
+			 # append separator to directory
+			 $path .= $w->{sep}  if $w->Callback(-isdircmd => $w, $path);
+			 $w->_set_text($path);
 			 $w->Finish;
 		     });
     # <Return> in the Listbox
@@ -126,7 +129,10 @@ sub Populate {
 		 my @sel = $lb->curselection;
 		 if (@sel) {
 		     # Take full path from CurrentChoices array
-		     $w->_set_text($w->{CurrentChoices}[$sel[0]]);
+		     my $path = $w->{CurrentChoices}[$sel[0]];
+		     # append separator to directory
+		     $path .= $w->{sep}  if $w->Callback(-isdircmd => $w, $path);
+		     $w->_set_text($path);
 		 }
 		 $w->Finish;
 	     });
