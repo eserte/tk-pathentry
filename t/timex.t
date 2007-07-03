@@ -2,7 +2,7 @@
 # -*- perl -*-
 
 #
-# $Id: timex.t,v 1.3 2007/03/14 21:48:55 eserte Exp $
+# $Id: timex.t,v 1.4 2007/07/03 15:36:45 k_wittrock Exp $
 # Author: Slaven Rezic
 #
 
@@ -14,7 +14,6 @@ use Tk::PathEntry;
 BEGIN {
     if (!eval q{
 	use Test;
-        use lib qw(/home/e/eserte/src/timex);
 	use Timex::Project;
 	1;
     }) {

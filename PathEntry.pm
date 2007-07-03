@@ -1,7 +1,7 @@
 # -*- perl -*-
 
 #
-# $Id: PathEntry.pm,v 1.28 2007/07/01 12:47:00 k_wittrock Exp $
+# $Id: PathEntry.pm,v 1.29 2007/07/03 15:36:45 k_wittrock Exp $
 # Author: Slaven Rezic
 #
 # Copyright (C) 2001,2002,2003 Slaven Rezic. All rights reserved.
@@ -16,7 +16,7 @@ package Tk::PathEntry;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = sprintf("%d.%02d", q$Revision: 1.28 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.29 $ =~ /(\d+)\.(\d+)/);
 
 use base qw(Tk::Derived Tk::Entry);
 
@@ -610,7 +610,7 @@ sub _set_intial_path {
 	}
     }
     $initpath .= $initfile if defined $initfile;
-    $w->_set_text($initpath);
+    $w->_set_text($initpath)  if $initpath;
 }
 
 1;
