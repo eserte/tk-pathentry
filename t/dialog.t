@@ -2,7 +2,7 @@
 # -*- perl -*-
 
 #
-# $Id: dialog.t,v 1.3 2007/03/14 21:48:55 eserte Exp $
+# $Id: dialog.t,v 1.4 2007/07/04 15:58:27 k_wittrock Exp $
 # Author: Slaven Rezic
 #
 
@@ -22,12 +22,6 @@ BEGIN {
 	print "# tests only work in non-BATCH mode with installed Test module\n";
 	print "1..1\n";
 	print "ok 1\n";
-	CORE::exit;
-    }
-
-    if ($^O eq 'MSWin32') {
-	print "1..1\n";
-	print "ok 1 # skip This test does not work on Windows\n";
 	CORE::exit;
     }
 
