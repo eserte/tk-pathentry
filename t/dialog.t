@@ -2,7 +2,7 @@
 # -*- perl -*-
 
 #
-# $Id: dialog.t,v 1.4 2007/07/04 15:58:27 k_wittrock Exp $
+# $Id: dialog.t,v 1.5 2007/07/11 17:08:23 k_wittrock Exp $
 # Author: Slaven Rezic
 #
 
@@ -36,8 +36,12 @@ No actual writes are performed in this test,
 so you can always say "OK" or "Yes".
 EOF
 
+my $f3 = $top->PathEntryDialog->Show;
+yc($f3);
+ok(1);
+
 my $f1 = $top->getOpenFile(-title => "File to open",
-			   -initialdir => $ENV{HOME},
+			   -initialdir => '.',
 			   -defaultextension => "ignored",
 			   -filetypes => [["ignored", "*"]],
 			  );
@@ -45,15 +49,11 @@ yc($f1);
 ok(1);
 
 my $f2 = $top->getSaveFile(-title => "File to save",
-			   -initialfile => "$ENV{HOME}/.cshrc",
+			   -initialfile => "$0",
 			   -defaultextension => "ignored",
 			   -filetypes => [["ignored", "*"]],
 			  );
 yc($f2);
-ok(1);
-
-my $f3 = $top->PathEntryDialog->Show;
-yc($f3);
 ok(1);
 
 sub yc {

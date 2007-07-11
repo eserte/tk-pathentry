@@ -1,5 +1,15 @@
 Revision history for Perl extension Tk::PathEntry.
 
+3.00
+	- New options -pathcompletion, -dircolor, -height, -messagecommand
+	- User defined alternative for the Tab key for path completion
+	- Enable the options and bindings of Tk::Listbox for Tk::PathEntry
+	- Enable the options of Tk::PathEntry for Tk::PathEntry::Dialog
+	- Enable keyboard input in the choices listbox
+	- Dynamic size of the choices listbox
+	- Allow whitespace and non-Ascii characters in pathname
+	- Supplements to the POD
+
 2.23
 	- fixes for Windows
 
