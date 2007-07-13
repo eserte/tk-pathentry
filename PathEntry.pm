@@ -1,7 +1,7 @@
 # -*- perl -*-
 
 #
-# $Id: PathEntry.pm,v 1.30 2007/07/04 15:58:26 k_wittrock Exp $
+# $Id: PathEntry.pm,v 1.31 2007/07/13 15:43:15 k_wittrock Exp $
 # Author: Slaven Rezic
 #
 # Copyright (C) 2001,2002,2003 Slaven Rezic. All rights reserved.
@@ -16,7 +16,7 @@ package Tk::PathEntry;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = sprintf("%d.%02d", q$Revision: 1.30 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.31 $ =~ /(\d+)\.(\d+)/);
 
 use base qw(Tk::Derived Tk::Entry);
 
@@ -70,7 +70,7 @@ sub ClassInit {
 		  # Apparently this situation doesn't do any harm.
 		  # return if $w->focusCurrent eq $w;
 		  my $choices_t = $w->Subwidget("ChoicesToplevel");
-		  $choices_t->withdraw;
+		  $choices_t->Finish;
 	      });
     $mw->bind($class,"<Return>" => \&_bind_return);
 
@@ -226,8 +226,8 @@ sub Populate {
 	 -cancelcommand => '-cancelcmd',
 	 -messagecmd  => ['CALLBACK', undef, undef, ['_show_msg']],
 	 -messagecommand => '-messagecmd',
-	 -complpath    => ['PASSIVE', undef, undef, '<Tab>'],
-	 -path_completion => '-complpath',
+	 -pathcompl    => ['PASSIVE', undef, undef, '<Tab>'],
+	 -pathcompletion => '-pathcompl',
 	 -height        => [$choices_l, qw/height Height 10/],
 	 -dircolor      => ['PASSIVE',  undef, undef, undef],
 	);
@@ -247,19 +247,25 @@ sub ConfigChanged {
     $w->_set_intial_path ($w->cget(-initialdir), $w->cget(-initialfile));
 
     # Bind the user-defined completion key
-    $w->_bind_completion($args->{-complpath}) if defined $args->{-complpath};
+    $w->_bind_completion($args->{-pathcompl}) if defined $args->{-pathcompl};
     $w->{max_show} = $w->cget(-height);   # save original height of the listbox
 }
 
 sub Finish {
     my $w = shift;
     my $choices_t = $w->Subwidget("ChoicesToplevel");
+    return unless $choices_t->state eq 'normal';
+    my $focus_curr = $choices_t->focusCurrent;
     $choices_t->withdraw;
     $choices_t->idletasks;
     delete $w->{CurrentChoices};
-    $w->toplevel->deiconify();   # ensure the visiblity of the container window
-    $w->toplevel->raise();
-    $w->focus();   # pass focus back to the Entry widget (required for Linux)
+    my $top = $w->toplevel;
+    return unless $top->state eq 'normal';
+    $top->deiconify();   # ensure the visiblity of the container window
+    $top->raise();
+    my $choices_l = $w->Subwidget("ChoicesLabel");
+    # pass focus back to the Entry widget (required for Linux)
+    $w->focus() if $focus_curr eq $choices_l;
 }
 
 sub _popup_on_key {
@@ -448,19 +454,19 @@ sub _bind_completion {
 
     # When Tk::PathEntry is called indirectly via Tk::PathEntry::Dialog->Show,
     # sub Populate will get called twice, first with the default value of the
-    # -complpath option, then with the user supplied value. Filter out the
+    # -pathcompl option, then with the user supplied value. Filter out the
     # correct call.
-    return unless $compl_event eq $w->cget(-complpath);
+    return unless $compl_event eq $w->cget(-pathcompl);
 
     if ($Tk::platform eq 'MSWin32'  and  $compl_event eq '<Alt-Tab>') {
 	my $msg = 'Event "Alt-Tab" is reserved by the Operating System; use "Tab" instead.';
-	$w->Callback(-messagecmd => $w, "Option -path_completion: $msg");
+	$w->Callback(-messagecmd => $w, "Option -pathcompletion: $msg");
 	$compl_event = '<Tab>';
     }
     eval {$w->bind($compl_event => \&_complete_current_path)};
     if ($@) {
 	(my $msg = $@) =~ s/ at .+/; use "Tab" instead./s;   # cut off line info
-	$w->Callback(-messagecmd => $w, "Option -path_completion: $msg");
+	$w->Callback(-messagecmd => $w, "Option -pathcompletion: $msg");
 	$compl_event = '<Tab>';
 	$w->bind('<Tab>' => \&_complete_current_path);
     }
@@ -708,9 +714,9 @@ C<< -messagecmd => sub {print "$_[1]\n"} >>, C<< -messagecmd => sub {$_[0]->bell
 or even C<< -messagecmd => undef >>. The default is a subroutine using
 C<messageBox>. 
 
-=item -complpath
+=item -pathcompl
 
-This defines the event that will force the completion of the current path. Alias: C<-path_completion>.
+This defines the event that will force the completion of the current path. Alias: C<-pathcompletion>.
 By default the C<Tab> key will be used. B<Note>: This default conflicts with the standard use
 of the C<Tab> key to move the focus to the next widget.
 
@@ -797,7 +803,7 @@ Moves the cursor one path component to the left.
 
 =back
 
-There is also a user-defined binding, see option C<-complpath>.
+There is also a user-defined binding, see option C<-pathcompl>.
 
 =head2 Bindings of the Listbox widget
 
@@ -826,7 +832,7 @@ Transfers the clicked choice to the Entry widget and calls C<Finish>.
     use Tk::PathEntry;
     my $pe = $mw->PathEntry
         (-autocomplete => 1,
-	 -path_completion => '<F5>',
+	 -pathcompletion => '<F5>',
 	 -selectcmd => sub {my $f = $_[1]; 
 	                    open(OUT, '>', $f) || die "cannot open file $f\n";
                            },
