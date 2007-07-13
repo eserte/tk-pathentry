@@ -1,7 +1,7 @@
 # -*- perl -*-
 
 #
-# $Id: Dialog.pm,v 1.4 2007/07/01 12:42:49 k_wittrock Exp $
+# $Id: Dialog.pm,v 1.5 2007/07/13 15:46:08 k_wittrock Exp $
 # Author: Slaven Rezic
 #
 # Copyright (C) 2001,2005 Slaven Rezic. All rights reserved.
@@ -17,7 +17,7 @@ use Tk::PathEntry;
 use base qw(Tk::DialogBox);
 use strict;
 use vars qw($VERSION);
-$VERSION = sprintf("%d.%02d", q$Revision: 1.4 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.5 $ =~ /(\d+)\.(\d+)/);
 
 Construct Tk::Widget 'PathEntryDialog';
 
@@ -83,9 +83,14 @@ sub Show {
 
 	if (defined $pathname && $w->cget(-create) && -f $pathname) {
 
+	    # Disable default button feature of Tk::DialogBox
+	    # (invalid option and not required for Windows)
+	    my $noDefault = $Tk::platform eq 'MSWin32' ? '' :
+                               "-default_button => 'none'";
 	    my $reply = $w->messageBox
 		(-icon => 'warning',
 		 -type => 'YesNo',
+		 eval {split(' => ', $noDefault)},
 		 -message => "File \"$pathname\" already exists.\nDo you want to overwrite it?");
 	    redo unless (lc($reply) eq 'yes');
 	}
