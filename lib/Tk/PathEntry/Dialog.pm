@@ -1,7 +1,7 @@
 # -*- perl -*-
 
 #
-# $Id: Dialog.pm,v 1.5 2007/07/13 15:46:08 k_wittrock Exp $
+# $Id: Dialog.pm,v 1.6 2007/08/29 15:59:12 k_wittrock Exp $
 # Author: Slaven Rezic
 #
 # Copyright (C) 2001,2005 Slaven Rezic. All rights reserved.
@@ -17,7 +17,7 @@ use Tk::PathEntry;
 use base qw(Tk::DialogBox);
 use strict;
 use vars qw($VERSION);
-$VERSION = sprintf("%d.%02d", q$Revision: 1.5 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.6 $ =~ /(\d+)\.(\d+)/);
 
 Construct Tk::Widget 'PathEntryDialog';
 
@@ -176,6 +176,14 @@ below the C<PathEntryDialog> window, the C<OK> and
 C<Cancel> buttons don't respond to mouse clicks. Workaround: Move the mouse
 cursor out of the button and back. Or use the Enter resp. Escape keys in
 place of the buttons.
+
+The following bug is known for B<PathEntryDialog> on Knoppix:
+C<PathEntryDialog> will often abort immediately with the error message
+
+	*** glibc detected *** malloc(): memory corruption: 0x08495514 ***
+
+Workaround: Do something that causes B<PathEntryDialog> to start at a different 
+memory location, e. g. open or close a Konqueror window (beleave me, this may help).
 
 =head1 SEE ALSO
 
