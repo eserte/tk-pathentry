@@ -2,7 +2,7 @@
 # -*- perl -*-
 
 #
-# $Id: base.t,v 1.4 2007/07/11 17:08:23 k_wittrock Exp $
+# $Id: base.t,v 1.12 2007/08/29 16:29:38 k_wittrock Exp $
 # Author: Slaven Rezic
 #
 

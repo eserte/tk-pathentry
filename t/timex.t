@@ -2,7 +2,7 @@
 # -*- perl -*-
 
 #
-# $Id: timex.t,v 1.4 2007/07/03 15:36:45 k_wittrock Exp $
+# $Id: timex.t,v 1.10 2007/08/29 16:30:35 k_wittrock Exp $
 # Author: Slaven Rezic
 #
 
