@@ -1,7 +1,7 @@
 # -*- perl -*-
 
 #
-# $Id: Dialog.pm,v 1.6 2007/08/29 15:59:12 k_wittrock Exp $
+# $Id: Dialog.pm,v 1.10 2007/08/29 16:18:50 k_wittrock Exp $
 # Author: Slaven Rezic
 #
 # Copyright (C) 2001,2005 Slaven Rezic. All rights reserved.
@@ -17,7 +17,7 @@ use Tk::PathEntry;
 use base qw(Tk::DialogBox);
 use strict;
 use vars qw($VERSION);
-$VERSION = sprintf("%d.%02d", q$Revision: 1.6 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.10 $ =~ /(\d+)\.(\d+)/);
 
 Construct Tk::Widget 'PathEntryDialog';
 
