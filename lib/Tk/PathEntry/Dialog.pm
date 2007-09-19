@@ -1,7 +1,7 @@
 # -*- perl -*-
 
 #
-# $Id: Dialog.pm,v 1.10 2007/08/29 16:18:50 k_wittrock Exp $
+# $Id: Dialog.pm,v 1.11 2007/09/19 18:58:17 eserte Exp $
 # Author: Slaven Rezic
 #
 # Copyright (C) 2001,2005 Slaven Rezic. All rights reserved.
@@ -17,14 +17,15 @@ use Tk::PathEntry;
 use base qw(Tk::DialogBox);
 use strict;
 use vars qw($VERSION);
-$VERSION = sprintf("%d.%02d", q$Revision: 1.10 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 1.11 $ =~ /(\d+)\.(\d+)/);
 
 Construct Tk::Widget 'PathEntryDialog';
 
 sub import {
     if (defined $_[1] and $_[1] eq 'as_default') {
 	local $^W = 0;
-	package Tk;
+	package # hide from PAUSE indexer
+	    Tk;
 	if ($Tk::VERSION < 804) {
 	    *FDialog      = \&Tk::PathEntry::Dialog::FDialog;
 	    *MotifFDialog = \&Tk::PathEntry::Dialog::FDialog;
