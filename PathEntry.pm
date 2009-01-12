@@ -1,10 +1,11 @@
 # -*- perl -*-
 
 #
-# $Id: PathEntry.pm,v 3.0 2007/08/29 16:32:13 k_wittrock Exp $
+# $Id: PathEntry.pm,v 3.1 2009/01/12 20:41:54 eserte Exp $
 # Author: Slaven Rezic
 #
-# Copyright (C) 2001,2002,2003 Slaven Rezic. All rights reserved.
+# Copyright (c) 2001,2002,2003,2007,2008 Slaven Rezic. All rights reserved.
+# Copyright (c) 2007 Klaus Wittrock. All rights reserved.
 # This package is free software; you can redistribute it and/or
 # modify it under the same terms as Perl itself.
 #
@@ -16,7 +17,7 @@ package Tk::PathEntry;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = sprintf("%d.%02d", q$Revision: 3.0 $ =~ /(\d+)\.(\d+)/);
+$VERSION = sprintf("%d.%02d", q$Revision: 3.1 $ =~ /(\d+)\.(\d+)/);
 
 use base qw(Tk::Derived Tk::Entry);
 
@@ -69,8 +70,7 @@ sub ClassInit {
 		  # Select the 2nd choice at a point above the OK button.
 		  # Apparently this situation doesn't do any harm.
 		  # return if $w->focusCurrent eq $w;
-		  my $choices_t = $w->Subwidget("ChoicesToplevel");
-		  $choices_t->Finish;
+		  $w->Finish;
 	      });
     $mw->bind($class,"<Return>" => \&_bind_return);
 
@@ -867,13 +867,15 @@ L<Tk::Entry (3)|Tk::Entry>, L<tcsh (1)|tcsh>, L<bash (1)|bash>.
 
 =head1 AUTHOR
 
-Slaven Rezic <srezic@cpan.org>
+Slaven Rezic <srezic@cpan.org>,
+Klaus Wittrock <wittrock@cpan.org>
 
 =head1 COPYRIGHT
 
-Copyright (c) 2001,2002 Slaven Rezic. All rights
-reserved. This module is free software; you can redistribute it and/or
-modify it under the same terms as Perl itself.
+Copyright (c) 2001,2002,2003,2007,2008 Slaven Rezic. Copyright (c)
+2007 Klaus Wittrock. All rights reserved. This module is free
+software; you can redistribute it and/or modify it under the same
+terms as Perl itself.
 
 =cut
 
