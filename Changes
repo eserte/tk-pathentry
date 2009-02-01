@@ -1,5 +1,11 @@
 Revision history for Perl extension Tk::PathEntry.
 
+3.02
+	- protect test scripts from non-existing DISPLAYs
+
+3.01
+	- fixed wrong usage of Finish() method
+
 3.00
 	- New options -pathcompletion, -dircolor, -height, -messagecommand
 	- User defined alternative for the Tab key for path completion
