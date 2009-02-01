@@ -2,10 +2,10 @@
 # -*- perl -*-
 
 #
-# $Id: Makefile.PL,v 1.5 2007/08/29 16:16:02 k_wittrock Exp $
+# $Id: Makefile.PL,v 1.6 2009/02/01 14:22:47 eserte Exp $
 # Author: Slaven Rezic
 #
-# Copyright (C) 2001 Slaven Rezic. All rights reserved.
+# Copyright (C) 2001-2009 Slaven Rezic. All rights reserved.
 # This program is free software; you can redistribute it and/or
 # modify it under the same terms as Perl itself.
 #
@@ -18,7 +18,7 @@ use ExtUtils::MakeMaker;
 WriteMakefile
   (
    'NAME'	   => 'Tk::PathEntry',
-   'VERSION_FROM'  => 'PathEntry.pm',
+   'VERSION'       => '3.02',
    'PREREQ_PM'     => { Tk => 800.020 },
    'NO_META'       => 1,
 
