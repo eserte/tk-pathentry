@@ -2,7 +2,7 @@
 # -*- perl -*-
 
 #
-# $Id: timex.t,v 1.10 2007/08/29 16:30:35 k_wittrock Exp $
+# $Id: timex.t,v 1.11 2009/02/01 14:24:41 eserte Exp $
 # Author: Slaven Rezic
 #
 
@@ -17,14 +17,18 @@ BEGIN {
 	use Timex::Project;
 	1;
     }) {
-	print "# tests only work with installed Test and Timex::Project module\n";
-	print "1..1\n";
-	print "ok 1\n";
+	print "1..0 # skip tests only work with installed Test and Timex::Project module\n";
 	CORE::exit;
     }
 }
 
-BEGIN { plan tests => 2 }
+my $top = eval { tkinit };
+if (!$top)  {
+    print "1..0 # skip cannot create main window: $@\n";
+    exit;
+}
+
+plan tests => 2;
 
 if (!defined $ENV{BATCH}) { $ENV{BATCH} = 1 }
 
@@ -52,7 +56,6 @@ my $pathname = ""; #$first_p->pathname;
 
 ok(!!$t->isa('Timex::Project'), 1);
 
-my $top = tkinit;
 $top->title("Select Timex projects:");
 $top->minsize(300,50);
 my $pe;

@@ -2,7 +2,7 @@
 # -*- perl -*-
 
 #
-# $Id: base.t,v 1.12 2007/08/29 16:29:38 k_wittrock Exp $
+# $Id: base.t,v 1.13 2009/02/01 14:24:41 eserte Exp $
 # Author: Slaven Rezic
 #
 
@@ -16,19 +16,22 @@ BEGIN {
 	use Test;
 	1;
     }) {
-	print "# tests only work with installed Test module\n";
-	print "1..1\n";
-	print "ok 1\n";
+	print "1..0 # skip not Test module\n";
 	exit;
     }
 }
 
-BEGIN { plan tests => 3 }
+my $top = eval { new MainWindow };
+if (!$top) {
+    print "1..0 # skip cannot create main window: $@\n";
+    exit;
+}
+
+plan tests => 3;
 
 if (!defined $ENV{BATCH}) { $ENV{BATCH} = 1 }
 defined $ENV{HOME}  or  $ENV{HOME} = '.';
 
-my $top = new MainWindow;
 my $file; # = "$ENV{HOME}";
 my $pe = $top->PathEntry(-textvariable => \$file,
 			 -selectcmd => sub { warn "selected...\n" },

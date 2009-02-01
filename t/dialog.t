@@ -2,7 +2,7 @@
 # -*- perl -*-
 
 #
-# $Id: dialog.t,v 1.12 2007/08/29 16:29:38 k_wittrock Exp $
+# $Id: dialog.t,v 1.13 2009/02/01 14:24:41 eserte Exp $
 # Author: Slaven Rezic
 #
 
@@ -19,17 +19,20 @@ BEGIN {
 	use Test;
 	1;
     } || $ENV{BATCH}) {
-	print "# tests only work in non-BATCH mode with installed Test module\n";
-	print "1..1\n";
-	print "ok 1\n";
+	print "1..0 # skip tests only work in non-BATCH mode with installed Test module\n";
 	CORE::exit;
     }
 
 }
 
-BEGIN { plan tests => 3 }
+my $top = eval { new MainWindow };
+if (!$top)  {
+    print "1..0 # skip cannot create main window: $@\n";
+    exit;
+}
 
-my $top = new MainWindow;
+plan tests => 3;
+
 $top->Message(-text => <<EOF)->pack;
 Note:
 No actual writes are performed in this test,
