@@ -1,5 +1,8 @@
 Revision history for Perl extension Tk::PathEntry.
 
+3.03
+	- no functional changes, just declared File::Glob as a prerequisite
+
 3.02
 	- protect test scripts from non-existing DISPLAYs
 
