@@ -1,10 +1,10 @@
 # -*- perl -*-
 
 #
-# $Id: PathEntry.pm,v 3.1 2009/01/12 20:41:54 eserte Exp $
+# $Id: PathEntry.pm,v 3.2 2009/03/01 23:37:51 eserte Exp $
 # Author: Slaven Rezic
 #
-# Copyright (c) 2001,2002,2003,2007,2008 Slaven Rezic. All rights reserved.
+# Copyright (c) 2001,2002,2003,2007,2008,2009 Slaven Rezic. All rights reserved.
 # Copyright (c) 2007 Klaus Wittrock. All rights reserved.
 # This package is free software; you can redistribute it and/or
 # modify it under the same terms as Perl itself.
@@ -17,7 +17,8 @@ package Tk::PathEntry;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = sprintf("%d.%02d", q$Revision: 3.1 $ =~ /(\d+)\.(\d+)/);
+#$VERSION = sprintf("%d.%02d", q$Revision: 3.2 $ =~ /(\d+)\.(\d+)/);
+$VERSION = '3.03';
 
 use base qw(Tk::Derived Tk::Entry);
 
@@ -872,10 +873,10 @@ Klaus Wittrock <wittrock@cpan.org>
 
 =head1 COPYRIGHT
 
-Copyright (c) 2001,2002,2003,2007,2008 Slaven Rezic. Copyright (c)
-2007 Klaus Wittrock. All rights reserved. This module is free
-software; you can redistribute it and/or modify it under the same
-terms as Perl itself.
+Copyright (c) 2001,2002,2003,2007,2008,2009 Slaven Rezic.
+Copyright (c) 2007 Klaus Wittrock.
+All rights reserved. This module is free software; you can
+redistribute it and/or modify it under the same terms as Perl itself.
 
 =cut
 
