@@ -2,7 +2,7 @@
 # -*- perl -*-
 
 #
-# $Id: Makefile.PL,v 1.7 2009/02/21 11:45:23 eserte Exp $
+# $Id: Makefile.PL,v 1.8 2009/05/31 15:21:46 k_wittrock Exp $
 # Author: Slaven Rezic
 #
 # Copyright (C) 2001-2009 Slaven Rezic. All rights reserved.
@@ -18,10 +18,8 @@ use ExtUtils::MakeMaker;
 WriteMakefile
   (
    'NAME'	   => 'Tk::PathEntry',
-   'VERSION'       => '3.03',
-   'PREREQ_PM'     => { Tk => 800.020,
-			File::Glob => 0,
-		      },
+   'VERSION_FROM'  => 'PathEntry.pm',
+   'PREREQ_PM'     => { Tk => 800.020 },
    'NO_META'       => 1,
 
    'dist'          => {'POSTOP'=>'-$(CHMOD) 644 $(DISTVNAME).tar$(SUFFIX)'},

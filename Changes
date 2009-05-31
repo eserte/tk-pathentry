@@ -1,5 +1,10 @@
 Revision history for Perl extension Tk::PathEntry.
 
+3.04
+	- Remove problem when the focus is in the choices listbox and the
+	  user clicks into a different widget
+	- Use standard Glob if File::Glob isn't installed (old Perl versions)
+
 3.03
 	- no functional changes, just declared File::Glob as a prerequisite
 
