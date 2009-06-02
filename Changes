@@ -1,5 +1,8 @@
 Revision history for Perl extension Tk::PathEntry.
 
+3.05
+	- no functional changes, just corrected file permissions
+
 3.04
 	- Remove problem when the focus is in the choices listbox and the
 	  user clicks into a different widget

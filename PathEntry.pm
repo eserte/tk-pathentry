@@ -1,7 +1,7 @@
 # -*- perl -*-
 
 #
-# $Id: PathEntry.pm,v 3.3 2009/05/31 15:21:46 k_wittrock Exp $
+# $Id: PathEntry.pm,v 3.4 2009/06/02 15:46:18 k_wittrock Exp $
 # Author: Slaven Rezic
 #
 # Copyright (c) 2001,2002,2003,2007,2008,2009 Slaven Rezic. All rights reserved.
@@ -17,8 +17,8 @@ package Tk::PathEntry;
 
 use strict;
 use vars qw($VERSION);
-#$VERSION = sprintf("%d.%02d", q$Revision: 3.3 $ =~ /(\d+)\.(\d+)/);
-$VERSION = '3.04';
+#$VERSION = sprintf("%d.%02d", q$Revision: 3.4 $ =~ /(\d+)\.(\d+)/);
+$VERSION = '3.05';
 
 # Allow whitespace in file pathes.
 # Silently use standard glob for old versions of Perl (you may get trouble
