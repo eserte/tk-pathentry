@@ -9,7 +9,7 @@
 # modify it under the same terms as Perl itself.
 #
 # Mail: srezic@cpan.org
-# WWW:  http://www.sourceforge.net/srezic
+# WWW:  https://github.com/eserte/tk-pathentry
 #
 
 package Tk::PathEntry;
