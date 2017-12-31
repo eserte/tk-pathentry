@@ -1,5 +1,8 @@
 Revision history for Perl extension Tk::PathEntry.
 
+3.06_50	2017-12-31
+	- no functional changes, just preparing for a re-release
+
 3.05
 	- no functional changes, just corrected file permissions
 

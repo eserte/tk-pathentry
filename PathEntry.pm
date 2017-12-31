@@ -1,10 +1,9 @@
 # -*- perl -*-
 
 #
-# $Id: PathEntry.pm,v 3.4 2009/06/02 15:46:18 k_wittrock Exp $
 # Author: Slaven Rezic
 #
-# Copyright (c) 2001,2002,2003,2007,2008,2009 Slaven Rezic. All rights reserved.
+# Copyright (c) 2001,2002,2003,2007,2008,2009,2017 Slaven Rezic. All rights reserved.
 # Copyright (c) 2007,2009 Klaus Wittrock. All rights reserved.
 # This package is free software; you can redistribute it and/or
 # modify it under the same terms as Perl itself.
@@ -17,8 +16,7 @@ package Tk::PathEntry;
 
 use strict;
 use vars qw($VERSION);
-#$VERSION = sprintf("%d.%02d", q$Revision: 3.4 $ =~ /(\d+)\.(\d+)/);
-$VERSION = '3.05';
+$VERSION = '3.06_50';
 
 # Allow whitespace in file pathes.
 # Silently use standard glob for old versions of Perl (you may get trouble
@@ -908,7 +906,7 @@ Klaus Wittrock <wittrock@cpan.org>
 
 =head1 COPYRIGHT
 
-Copyright (c) 2001,2002,2003,2007,2008,2009 Slaven Rezic.
+Copyright (c) 2001,2002,2003,2007,2008,2009,2017 Slaven Rezic.
 Copyright (c) 2007,2009 Klaus Wittrock.
 All rights reserved. This module is free software; you can
 redistribute it and/or modify it under the same terms as Perl itself.
