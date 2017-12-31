@@ -26,6 +26,7 @@ if (!$top) {
     print "1..0 # skip cannot create main window: $@\n";
     exit;
 }
+$top->geometry('+10+10'); # for twm
 
 plan tests => 3;
 
