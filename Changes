@@ -1,9 +1,11 @@
 Revision history for Perl extension Tk::PathEntry.
 
-3.06_50	2017-12-31
-	- no functional changes, just preparing for a re-release
+3.06_50	2017-12-31 (SREZIC)
+	- make sure no interactive window placement happens
+	  in the test suite
+	- META.* update for repository change (now it's on github)
 
-3.05
+3.05	2009-06-02 (WITTROCK)
 	- no functional changes, just corrected file permissions
 
 3.04
