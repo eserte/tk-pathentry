@@ -4,7 +4,7 @@
 #
 # Author: Slaven Rezic
 #
-# Copyright (C) 2001-2009,2017 Slaven Rezic. All rights reserved.
+# Copyright (C) 2001-2009,2017,2018 Slaven Rezic. All rights reserved.
 # This program is free software; you can redistribute it and/or
 # modify it under the same terms as Perl itself.
 #
@@ -56,7 +56,7 @@ sub MY::postamble {
 PERL_TEST_DISTRIBUTION_CHANGES=yes
 
 .include "../../perl.release.mk"
-.include "../../perl.cvs.mk"
+.include "../../perl.git.mk"
 
 EOF
     }
