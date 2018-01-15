@@ -1,5 +1,8 @@
 Revision history for Perl extension Tk::PathEntry.
 
+3.07	2018-01-15 (SREZIC)
+	- stable release with the changes in 3.06_50
+
 3.06_50	2017-12-31 (SREZIC)
 	- make sure no interactive window placement happens
 	  in the test suite
