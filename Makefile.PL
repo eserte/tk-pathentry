@@ -36,6 +36,7 @@ WriteMakefile
     AUTHOR         => 'Slaven Rezic <srezic@cpan.org>',
    'VERSION_FROM'  => 'PathEntry.pm',
    'ABSTRACT'      => 'Entry widget for selecting paths with completion',
+   'LICENSE'       => 'perl_5',
    'PREREQ_PM'     => { Tk => 800.020 },
 
     ($eumm_recent_enough
