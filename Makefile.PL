@@ -16,7 +16,7 @@ use strict;
 use warnings;
 use ExtUtils::MakeMaker;
 
-my $is_devel_host = defined $ENV{USER} && $ENV{USER} eq 'eserte' && $^O =~ /bsd/i && -f "../../perl.release.mk";
+my $is_devel_host = defined $ENV{USER} && $ENV{USER} eq 'eserte' && -f "../../perl.release.mk";
 my $eumm_recent_enough = $ExtUtils::MakeMaker::VERSION >= 6.54;
 
 if (!$eumm_recent_enough) {
