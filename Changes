@@ -1,5 +1,8 @@
 Revision history for Perl extension Tk::PathEntry.
 
+3.07_50 2019-09-20 (SREZIC)
+	- use <...> instead of File::Glob::glob (for perl 5.30 compat)
+
 3.07	2018-01-15 (SREZIC)
 	- stable release with the changes in 3.06_50
 
