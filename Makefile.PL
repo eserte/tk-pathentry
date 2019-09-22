@@ -55,6 +55,9 @@ sub MY::postamble {
 	$postamble .= <<'EOF';
 
 PERL_TEST_DISTRIBUTION_CHANGES=yes
+# - prereq: "Undefined subroutine &Test::Distribution::prereq::WriteMakefile"
+# - podcover: some internal Tk methods not documented
+PERL_TEST_DISTRIBUTION_OPTS=not prereq,podcover
 
 .include "../../perl.release.mk"
 .include "../../perl.git.mk"
