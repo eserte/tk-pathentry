@@ -16,7 +16,7 @@ package Tk::PathEntry;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = '3.07_50';
+$VERSION = '3.08';
 
 use base qw(Tk::Derived Tk::Entry);
 
