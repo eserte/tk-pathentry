@@ -25,8 +25,8 @@ matrix:
 
 before_install:
  # Remove broken deb repo:
- - '[ "`lsb_release -cs`" = "precise" ] && sudo rm -f /etc/apt/sources.list.d/mongodb.list || true'
- - sudo apt-get update -qq
+ - '[ "`lsb_release -cs`" = "precise" ] && (cd /etc/apt/sources.list.d && sudo rm -f mongodb.list google-chrome.list cassandra.list github_git-lfs.list couchdb.list pgdg.list) || true'
+ - sudo apt-get update
  - sudo apt-get install -qq xvfb twm libx11-dev libfreetype6-dev libxft-dev
  - if [ "$USE_SYSTEM_PERL" = 1 ]; then perlbrew off; sudo apt-get install -qq perl-tk; fi
  - Xvfb :123 &
