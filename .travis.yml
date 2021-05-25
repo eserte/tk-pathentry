@@ -2,30 +2,30 @@ language: perl
 matrix:
   include:
     - perl: "5.30"
-      dist: xenial
+      dist: bionic
     - perl: "5.28"
-      dist: xenial
+      dist: bionic
     - perl: "5.22"
       dist: xenial
       env: USE_SYSTEM_PERL=1
     - perl: "5.20"
-      dist: precise
+      dist: xebial
     - perl: "5.18"
-      dist: precise
+      dist: trusty
     - perl: "5.16"
-      dist: precise
+      dist: trusty
     - perl: "5.14"
-      dist: precise
+      dist: trusty
     - perl: "5.12"
-      dist: precise
+      dist: trusty
     - perl: "5.10"
-      dist: precise
+      dist: trusty
     - perl: "5.8"
-      dist: precise
+      dist: trusty
 
 before_install:
  # Remove broken deb repo:
- - '[ "`lsb_release -cs`" = "precise" ] && (cd /etc/apt/sources.list.d && sudo rm -f mongodb.list google-chrome.list cassandra.list github_git-lfs.list couchdb.list pgdg.list) || true'
+ - '[ "`lsb_release -cs`" = "precise" -o "`lsb_release -cs`" = "trusty" ] && (cd /etc/apt/sources.list.d && sudo rm -f mongodb.list google-chrome.list cassandra.list github_git-lfs.list couchdb.list pgdg.list) || true'
  - sudo apt-get update
  - sudo apt-get install -qq xvfb twm libx11-dev libfreetype6-dev libxft-dev
  - if [ "$USE_SYSTEM_PERL" = 1 ]; then perlbrew off; sudo apt-get install -qq perl-tk; fi
